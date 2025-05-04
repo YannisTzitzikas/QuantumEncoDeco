@@ -32,7 +32,7 @@ public class Pipeline {
       
 	
 	/**
-	 * Checks if the configuration exists and prints start and the read configuration
+	 * Checks if the configuration exists and prints start and the data of the  configuration file
 	 * @return
 	 */
 	boolean isConfigurationOk() {
@@ -48,7 +48,7 @@ public class Pipeline {
 	
 	
 	/**
-	 * For each line of the input file it writes a fixed bit string 
+	 * For each line of the inputfile it writes a fixed bit string to the output file
 	 */
 public void transformDummy() {
 	int linesWritten=0;
@@ -72,103 +72,55 @@ public void transformDummy() {
 		}
 		r.close();
 		w.close();
-		System.out.println("Pipeline completed. Wrote " + linesWritten + " lines.");
+		System.out.println("Pipeline completed. Wrote " + linesWritten + " lines at the output file.");
 	}		
  }	
-		
-	
-	/**
-	 * This should be completed
-	 */
-	public void transform() {
-		
-		if (isConfigurationOk() ) {
-		
-		BReader r = new BReader(config.getInputfilepath());
-		EWritter w = new EWritter(config.getOutputfilepath());
-		
-		// Writing a prefix to the file
-		w.writePrefix();
-		
-		
-		OntologyReader or = new OntologyReader() ;
-		System.out.println(or.readTriplesFromPath(config.getInputfilepath()));
-		
-		
-		int linesWritten=0;
-		/*
-		// line by line processing
-		
-		String line;
-		try {
-			while ((line = r.bfr.readLine()) !=null ) {
-				
-				//System.out.println(line);
-				w.write("0000000000000000000");
-				w.write("\n");
-				linesWritten++;
-			}
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		//w.write("bye bye");
-		*/
-		
-		r.close();
-		w.close();
-		
-		System.out.println("Pipeline completed. Wrote " + linesWritten + " lines.");
-	
-		
-		
-		// put all the data in a arraylist of strings	
-		/*
-		ArrayList data = r.readContentsAsArrayListOfArraysToStrings("\t",false); // tab separator
-		//write them all (for testing)
-		for (row: data) {
-			Stream.of((String[])row).forEach(e -> w.write("|"+ e + "|"));
-			w.write("\n");
-		}
-		*/		
-		/*
-		ArrayList<String> data = r.readContentsAsArraylistOfStrings(); // 
-		Stream.of(data).forEach(e -> w.write("|"+ e + "\n"));
-		*/
-		//w.write("\n");
-				
-		
-		// apply each rule in order
-		
-		/*
-		//for each row test all rules
-		for (String row: data) {
-			for (Rule rl: config.getRules()) {
-				w.write(rl.apply(row));
-				w.write("\n");
-				//
-			}
-		
-		
-		}
-		
-		*/
-		
-		
-		
-		
-		
-		
-		//return 1;
-	}
-	}
-   
-}
 
+
+/**
+ * Incomplete
+ */
+public void encodeTODO() {
+int linesWritten=0;
+if (isConfigurationOk() ) {
+	BReader r = new BReader(config.getInputfilepath());
+	EWritter w = new EWritter(config.getOutputfilepath());
+	OntologyReader or = new OntologyReader(); // reads a file
+	
+	w.writePrefix(); // Writing a prefix to the file
+		
+	String line;
+	try {
+		/*
+		 * R1: 
+		 *  1/ Edw prepei na pairnoume ola ta URIs tou montelou
+		 *     (pou emfanizontai subjects, predicate, object) - mesw klhsewn thw Jena (opws sto paradeigma OntologyReader)
+		 *  2/ Na tous dinoume ena auksonta arithmo 
+		 *  3/ Na ftiaxnoume mia eggrafh sto Dictionary (URI - bitstring)
+		 *      Ta bitstring analoga me to posa xreiazontai
+		 *      To config file prepei na exei kai dictionaryName
+		 *      (isws kai mode: encode, decode)
+		 *  4/ Meta na ksanadiavazoume ta statements kai ena ena na to kwdikopoiome
+		 *     kai na to grafoume sto output file
+		 *  5/ gia test tha mporsouame kapou na kanoume kai decoding
+		 */
+		
+	} catch (Exception e) {
+		e.printStackTrace();
+	}
+	r.close();
+	w.close();
+	System.out.println("Pipeline completed. Wrote " + linesWritten + " lines at the output file.");
+}		
+}	
+		
+}
 
 class PipelineClient {
 	public static void main(String[] lala) {
 		
+		Pipeline p = new Pipeline("Resources/configFiles/configAristotle.json");
+		p.transformDummy();
 		
 	}
 }

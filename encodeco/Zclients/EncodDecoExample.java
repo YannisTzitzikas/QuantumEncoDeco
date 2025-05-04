@@ -15,6 +15,7 @@ public class EncodDecoExample {
 	
 	public static void main(String[] args) {
 		System.out.print("EncoDeco v.0.1");
+		
 		/*
 		Pipeline ep = new Pipeline("Resources/configFiles/currentConfig.json");
 		ep.transformDummy();
@@ -24,8 +25,7 @@ public class EncodDecoExample {
 		Pipeline ep2 = new Pipeline("Resources/configFiles/configAristotle.json");
 		ep2.transformDummy();
 		
-		
-		
+
 		System.out.print("EncoDeco: bye bye");
 
 	}

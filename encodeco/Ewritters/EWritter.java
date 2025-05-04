@@ -7,6 +7,7 @@ import java.io.FileWriter;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
+ * Class with various utility methods for writting files
  *
  */
 public class EWritter {
