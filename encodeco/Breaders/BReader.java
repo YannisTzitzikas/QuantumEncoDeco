@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 
 /**
- * Class for various utilties for READING FILES  (plain and csv)
+ * Class for various utilities for READING FILES  (plain and csv)
  * 
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
  *
@@ -36,12 +36,10 @@ public class BReader {
     	 try {
 			fr.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
      }
 	
-     
      
           
      /**
@@ -119,7 +117,9 @@ public class BReader {
 		try {
 			while ((line = bfr.readLine()) != null) {   
 				String[] tmp2 = line.split(","); // reading the tokens of a line
-				System.out.println(tmp2);
+				for (String cell: tmp2)
+						System.out.print(cell + " ");
+				System.out.println();
 			}
 		} catch (Exception e) {
 			System.out.println(e);
@@ -132,7 +132,7 @@ public class BReader {
 
 class BReaderClient {
 	public static void main(String[] lala) {
-		BReader btest = new BReader("Resources/datafiles/toyInput.rdf");
+		BReader btest = new BReader("Resources/datafiles/test.csv");
 		btest.read();
 	}
 }

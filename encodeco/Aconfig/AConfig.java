@@ -22,6 +22,8 @@ import org.json.simple.parser.ParseException;
  * 
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
  *  Class for configuration. It can store/read a configuration in JSON format.
+ *  In this way, we can have several configutation file 
+ *  (instead of having to change the code to test an alternative configuration).
  */
 
 public class AConfig {
@@ -150,13 +152,16 @@ class AConfigClient{
     	AConfig ac1 = new AConfig();
     	ac1.setInputfilepath( "datafiles/LALA.tsv");
     	ac1.setOutputfilepath("datafiles/LALATRANSFORMED.txt");
-    	ac1.writeConfigFile("Resources/configFiles/currentConfig.json");
+    	ac1.writeConfigFile("Resources/configFiles/tmpConfig.json");
     	
     		
     	// B. READING A CONFIG FILE PROGRAMMATICALLY
-    	AConfig ac2 = new AConfig("./Resources/configFiles/currentConfig.json");
+    	AConfig ac2 = new AConfig("./Resources/configFiles/tmpConfig.json");
     	System.out.println(ac2.getInputfilepath() + " "  + ac2.getOutputfilepath());
     	//System.out.println(ac2.getRules());   	
+    	
+    	System.out.println();
+    	System.out.println(ac2);
     }
 	
 }
