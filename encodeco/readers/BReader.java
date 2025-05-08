@@ -14,7 +14,6 @@ import java.util.stream.Stream;
  *
  */
 public class BReader {
-	private String filepath;
 	private FileReader fr ;
 	public BufferedReader bfr ;
 	

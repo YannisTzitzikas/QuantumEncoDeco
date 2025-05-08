@@ -4,9 +4,7 @@
 package readers;
 
 import java.awt.Desktop;
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URL;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;

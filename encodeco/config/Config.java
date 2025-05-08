@@ -18,14 +18,14 @@ public final class Config {
     private static final String         DEFAULT_OUTPUT_PATH = "output.txt";
     private static final EncodingType   DEFAULT_ENCODING    = EncodingType.R1;
 
-    private final String                inputFilePath;
-    private final String                outputFilePath;
+    private final String                inputPath;
+    private final String                outputPath;
     private final EncodingType          encoding;
 
     //----- Constructors ----- //
     private Config(String inputFilePath, String outputFilePath, EncodingType encoding) {
-        this.inputFilePath = inputFilePath;
-        this.outputFilePath = outputFilePath;
+        this.inputPath = inputFilePath;
+        this.outputPath = outputFilePath;
         this.encoding = encoding;
     }
 
@@ -56,12 +56,12 @@ public final class Config {
     }
 
     //----- Getters ----- //
-    public String getInputFilePath() {
-        return inputFilePath;
+    public String getInputPath() {
+        return inputPath;
     }
 
-    public String getOutputFilePath() {
-        return outputFilePath;
+    public String getOutputPath() {
+        return outputPath;
     }
 
     public EncodingType getEncoding() {
@@ -71,8 +71,8 @@ public final class Config {
     //----- toString ----- //
     @Override
     public String toString() {
-        String i = "\tInput file: "  + inputFilePath;
-        String o = "\tOutput file: " + outputFilePath;
+        String i = "\tInput file: "  + inputPath;
+        String o = "\tOutput file: " + outputPath;
         String e = "\tEncoding: "    + encoding;
         return i + "\n" + o + "\n" + e;
     }
