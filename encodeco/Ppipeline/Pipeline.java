@@ -46,7 +46,6 @@ public class Pipeline {
 	}
 	
 	
-	
 	/**
 	 * For each line of the inputfile it writes a fixed bit string to the output file
 	 */
