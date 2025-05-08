@@ -1,6 +1,7 @@
 package config;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public interface ConfigParser {
     // Parse the Configuration

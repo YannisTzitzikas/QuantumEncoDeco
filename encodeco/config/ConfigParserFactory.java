@@ -24,14 +24,14 @@ public class ConfigParserFactory {
     public static ConfigParser createParser(File file) {
         String extension =  file.getName()
                                 .toLowerCase()
-                                .substring(fileName.lastIndexOf('.'));
+                                .substring(file.getName().lastIndexOf('.'));
 
         return getParser(extension);
     }
 
     public static ConfigParser createParser(String filePath) {
         String extension =  filePath.toLowerCase()
-                                    .substring(fileName.lastIndexOf('.'));
+                                    .substring(filePath.lastIndexOf('.'));
 
         return getParser(extension);
     }

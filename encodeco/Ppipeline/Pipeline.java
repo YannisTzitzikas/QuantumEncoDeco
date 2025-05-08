@@ -4,14 +4,12 @@
 package Ppipeline;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.stream.Stream;
 
-import Aconfig.AConfig;
-import Breaders.BReader;
-import Breaders.OntologyReader;
+import config.AConfig;
+import readers.BReader;
+import readers.OntologyReader;
 //import Ctransformers.Rule;
-import Ewritters.EWritter;
+import writters.EWritter;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
@@ -84,11 +82,8 @@ int linesWritten=0;
 if (isConfigurationOk() ) {
 	BReader r = new BReader(config.getInputfilepath());
 	EWritter w = new EWritter(config.getOutputfilepath());
-	OntologyReader or = new OntologyReader(); // reads a file
-	
 	w.writePrefix(); // Writing a prefix to the file
 		
-	String line;
 	try {
 		/*
 		 * R1: 

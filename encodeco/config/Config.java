@@ -2,6 +2,7 @@ package config;
 
 import java.util.Objects;
 
+import encode.EncodingType;
 
 /**
  * 
@@ -70,8 +71,8 @@ public final class Config {
     //----- toString ----- //
     @Override
     public String toString() {
-        String i = "\tInput file: "  + inputfilepath;
-        String o = "\tOutput file: " + outputfilepath;
+        String i = "\tInput file: "  + inputFilePath;
+        String o = "\tOutput file: " + outputFilePath;
         String e = "\tEncoding: "    + encoding;
         return i + "\n" + o + "\n" + e;
     }

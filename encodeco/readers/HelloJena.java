@@ -4,13 +4,12 @@
  * Various changes and additions by Yannis Tzitzikas
  * Status: ok (it runs)
  */
-package Breaders;
+package readers;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -208,10 +207,8 @@ class HelloJena {
 	    try {
 			System.out.println(JsonUtils.toPrettyString(jsonList));
 		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		System.out.println("JSON list of maps:\n" + jsonList);

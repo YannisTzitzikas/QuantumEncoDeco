@@ -1,7 +1,7 @@
 /**
  * 
  */
-package Ctransformers;
+package transformers;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)

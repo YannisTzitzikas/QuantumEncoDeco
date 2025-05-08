@@ -1,7 +1,7 @@
 /**
  * 
  */
-package Breaders;
+package readers;
 
 import java.awt.Desktop;
 import java.io.FileInputStream;

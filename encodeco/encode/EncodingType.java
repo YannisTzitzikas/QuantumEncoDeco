@@ -1,4 +1,4 @@
-package config;
+package encode;
 
 public enum EncodingType {
     R1, 

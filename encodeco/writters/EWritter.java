@@ -1,7 +1,7 @@
 /**
  * 
  */
-package Ewritters;
+package writters;
 
 import java.io.FileWriter;
 

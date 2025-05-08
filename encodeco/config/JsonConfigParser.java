@@ -10,6 +10,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import encode.EncodingType;
+
 /**
  * 
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
@@ -35,7 +37,7 @@ public class JsonConfigParser implements ConfigParser {
 
     @Override
     public Config parseConfig(String filePath) {
-        if (filePath == null || filePath.isBlank()) {
+        if (filePath == null || filePath == "") {
             throw new IllegalArgumentException("File path cannot be null or empty.");
         }
         return parseConfig(new File(filePath)); // Convert String to File
@@ -65,14 +67,14 @@ public class JsonConfigParser implements ConfigParser {
 
     private EncodingType parseEncoding(String encoding) {
         if (encoding == null) {
-            return EncodingType.DEFAULT;  // Adjust based on your EncodingType enum
+            return EncodingType.R1;  // Adjust based on your EncodingType enum
         }
 
         try {
             return EncodingType.valueOf(encoding.toUpperCase());
         } catch (IllegalArgumentException e) {
             System.err.println("Warning: Unknown encoding '" + encoding + "'. Using default.");
-            return EncodingType.DEFAULT;
+            return EncodingType.R1;
         }
     }
 }
