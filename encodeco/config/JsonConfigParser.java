@@ -5,12 +5,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.json.simple.JSONArray;
+import java.util.Map;
+import java.util.HashMap;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import encode.EncodingType;
+import codec.EncodingType;
 
 /**
  * 
@@ -46,15 +48,33 @@ public class JsonConfigParser implements ConfigParser {
     private Config parseJson(File file) {
         try (FileReader reader = new FileReader(file)) {
             JSONParser jsonParser = new JSONParser();
-            JSONArray configArray = (JSONArray) jsonParser.parse(reader);
-            JSONObject configObj = (JSONObject) configArray.get(0);
+            JSONObject configObj = (JSONObject) jsonParser.parse(reader);
+
+            // Extract base config fields
+            String inputFile = (String) configObj.get("inputFile");
+            String outputFile = (String) configObj.get("outputFile");
+            EncodingType encoding = parseEncoding((String) configObj.get("encoding"));
+
+            // Extract additional parameters
+            Map<String, String> parameters = new HashMap<>();
+            
+            JSONObject paramsObj = (JSONObject) configObj.get("parameters");
+            
+            if (paramsObj != null) {
+                for (Object key : paramsObj.keySet()) { 
+                    String paramKey   = (String) key; 
+                    String paramValue = (String) paramsObj.get(paramKey);
+                    parameters.put(paramKey, paramValue);
+                }
+            }
 
             return new Config.Builder()
-                .withInputFilePath((String) configObj.get("inputFile"))
-                .withOutputFilePath((String) configObj.get("outputFile"))
-                .withEncoding(parseEncoding((String) configObj.get("encoding")))
+                .withInputFilePath(inputFile)
+                .withOutputFilePath(outputFile)
+                .withEncoding(encoding)
+                .withParameters(parameters) 
                 .build();
-            
+
         } catch (IOException | ParseException e) {
             throw new RuntimeException("Error parsing config file: " + e.getMessage(), e);
         }

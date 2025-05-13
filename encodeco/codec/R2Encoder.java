@@ -1,4 +1,4 @@
-package encode;
+package codec;
 
 public class R2Encoder {
 

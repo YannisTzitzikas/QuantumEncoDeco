@@ -136,8 +136,7 @@ public class OntologyReader {
 		String[]  KFfilesToTest = {
 				//"/ontologies/cidoc_crm_v6.2-2018April.rdfs.xml",   // cidoc crm 2018
 				//"/ontologies/CIDOC_CRM_v7.1.1.rdfs.xml",  // cirod crm  2021
-				"/datafiles/Aristotle.xml",
-				//"Resources/datafiles/toyInput.rdf";
+				"Resources/datafiles/toyInput.rdf"
 		};
 		OntologyReader a = new OntologyReader();
 		for (String file: 	KFfilesToTest) {

@@ -7,7 +7,6 @@ import java.io.IOException;
 
 import config.AConfig;
 import readers.BReader;
-import readers.OntologyReader;
 //import Ctransformers.Rule;
 import writters.EWritter;
 
@@ -52,13 +51,9 @@ public void transformDummy() {
 	if (isConfigurationOk() ) {
 		BReader r = new BReader(config.getInputfilepath());
 		EWritter w = new EWritter(config.getOutputfilepath());
-		OntologyReader or = new OntologyReader(); // reads a file
-		
-		
 		w.writePrefix(); // Writing a prefix to the file
-		String line;
 		try {
-			while ((line = r.bfr.readLine()) !=null ) {   // line by line processing
+			while ((r.bfr.readLine()) !=null ) {   // line by line processing
 				//System.out.println(line);
 				w.write("010010000000000000000");
 				w.write("\n");
