@@ -7,7 +7,7 @@ import com.ics.model.Record;
 import java.io.InputStream;
 import java.util.function.Consumer;
 
-public class RDFXMLRecordReader {
+public class RDFXMLRecordReader implements RecordReader {
 
     public void readRecord(String filePath, Consumer<Record> processor) {
         Model model = ModelFactory.createDefaultModel();
