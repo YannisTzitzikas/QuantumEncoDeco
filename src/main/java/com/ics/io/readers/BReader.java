@@ -1,4 +1,4 @@
-package com.ics.readers;
+package com.ics.io.readers;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

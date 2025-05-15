@@ -3,9 +3,11 @@ package com.ics.config;
 import java.io.File;
 import java.nio.file.Path;
 
+import java.util.List;
+
 public interface ConfigParser {
     // Parse the Configuration
-    public Config     parseConfig(File  file);
-    public Config     parseConfig(Path filePath);
-    public Config     parseConfig(String filePath);
+    public List<Config>     parseConfig(File  file);
+    public List<Config>     parseConfig(Path filePath);
+    public List<Config>     parseConfig(String filePath);
 }

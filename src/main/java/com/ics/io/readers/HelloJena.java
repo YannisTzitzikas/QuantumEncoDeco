@@ -4,7 +4,7 @@
  * Various changes and additions by Yannis Tzitzikas
  * Status: ok (it runs)
  */
-package com.ics.readers;
+package com.ics.io.readers;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;

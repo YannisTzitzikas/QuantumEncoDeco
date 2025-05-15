@@ -24,9 +24,9 @@ public final class Config {
 
     //----- Constructors ----- //
     private Config(String inputPath, String outputPath, String encoding, Map<String, String> parameters) {
-        this.inputPath = inputPath;
+        this.inputPath  = inputPath;
         this.outputPath = outputPath;
-        this.encoding = encoding;
+        this.encoding   = encoding;
         this.parameters = parameters;
     }
 

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.ics.readers;
+package com.ics.io.readers;
 
 import java.awt.Desktop;
 import java.io.InputStream;

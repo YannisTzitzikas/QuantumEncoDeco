@@ -5,9 +5,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import java.util.Map;
-import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -20,7 +21,7 @@ import org.json.simple.parser.ParseException;
 public class JsonConfigParser implements ConfigParser {
 
     @Override
-    public Config parseConfig(File file) {
+    public List<Config> parseConfig(File file) {
         if (!validateFile(file)) {
             throw new IllegalArgumentException("Invalid file provided: " + file.getPath());
         }
@@ -28,7 +29,7 @@ public class JsonConfigParser implements ConfigParser {
     }
 
     @Override
-    public Config parseConfig(Path filePath) {
+    public List<Config> parseConfig(Path filePath) {
         if (filePath == null) {
             throw new IllegalArgumentException("File path cannot be null.");
         }
@@ -36,51 +37,55 @@ public class JsonConfigParser implements ConfigParser {
     }
 
     @Override
-    public Config parseConfig(String filePath) {
+    public List<Config> parseConfig(String filePath) {
         if (filePath == null || filePath == "") {
             throw new IllegalArgumentException("File path cannot be null or empty.");
         }
         return parseConfig(new File(filePath)); // Convert String to File
     }
 
-    private Config parseJson(File file) {
+        private List<Config> parseJson(File file) {
+        List<Config> configList = new ArrayList<>();
+
         try (FileReader reader = new FileReader(file)) {
             JSONParser jsonParser = new JSONParser();
-            JSONObject configObj = (JSONObject) jsonParser.parse(reader);
+            Object parsedObj = jsonParser.parse(reader);
 
-            // Extract base config fields
-            String inputFile  = (String) configObj.get("inputFile");
-            String outputFile = (String) configObj.get("outputFile");
-            String encoding   = (String) configObj.get("encoding");
-
-            // Extract additional parameters
-            Map<String, String> parameters = new HashMap<>();
-            
-            JSONObject paramsObj = (JSONObject) configObj.get("parameters");
-            
-            if (paramsObj != null) {
-                for (Object key : paramsObj.keySet()) { 
-                    String paramKey   = (String) key; 
-                    String paramValue = (String) paramsObj.get(paramKey);
-                    parameters.put(paramKey, paramValue);
+            if (parsedObj instanceof JSONArray) {
+                JSONArray configArray = (JSONArray) parsedObj;
+                for (Object obj : configArray) {
+                    if (obj instanceof JSONObject) {
+                        configList.add(parseConfigObject((JSONObject) obj));
+                    }
                 }
+            } else if (parsedObj instanceof JSONObject) {
+                configList.add(parseConfigObject((JSONObject) parsedObj));
+            } else {
+                throw new RuntimeException("Unexpected JSON format. Expected JSONObject or JSONArray.");
             }
-
-            return new Config.Builder()
-                .withInputFilePath(inputFile)
-                .withOutputFilePath(outputFile)
-                .withEncoding(encoding)
-                .withParameters(parameters) 
-                .build();
 
         } catch (IOException | ParseException e) {
             throw new RuntimeException("Error parsing config file: " + e.getMessage(), e);
         }
+
+        return configList;
     }
+
 
     // ----- Utilities ----- //
     private boolean validateFile(File file) {
         return file != null && file.exists() && file.isFile() && file.getName().toLowerCase().endsWith(".json");
     }
 
+    private Config parseConfigObject(JSONObject configObj) {
+        String inputFile  = (String) configObj.get("inputFile");
+        String outputFile = (String) configObj.get("outputFile");
+        String encoding   = (String) configObj.get("encoding");
+
+        return new Config.Builder()
+            .withInputFilePath(inputFile)
+            .withOutputFilePath(outputFile)
+            .withEncoding(encoding)
+            .build();
+    }
 }
