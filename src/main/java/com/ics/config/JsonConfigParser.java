@@ -12,8 +12,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.ics.codec.EncodingType;
-
 /**
  * 
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
@@ -51,9 +49,9 @@ public class JsonConfigParser implements ConfigParser {
             JSONObject configObj = (JSONObject) jsonParser.parse(reader);
 
             // Extract base config fields
-            String inputFile = (String) configObj.get("inputFile");
+            String inputFile  = (String) configObj.get("inputFile");
             String outputFile = (String) configObj.get("outputFile");
-            EncodingType encoding = parseEncoding((String) configObj.get("encoding"));
+            String encoding   = (String) configObj.get("encoding");
 
             // Extract additional parameters
             Map<String, String> parameters = new HashMap<>();
@@ -85,16 +83,4 @@ public class JsonConfigParser implements ConfigParser {
         return file != null && file.exists() && file.isFile() && file.getName().toLowerCase().endsWith(".json");
     }
 
-    private EncodingType parseEncoding(String encoding) {
-        if (encoding == null) {
-            return EncodingType.R1;  // Adjust based on your EncodingType enum
-        }
-
-        try {
-            return EncodingType.valueOf(encoding.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            System.err.println("Warning: Unknown encoding '" + encoding + "'. Using default.");
-            return EncodingType.R1;
-        }
-    }
 }

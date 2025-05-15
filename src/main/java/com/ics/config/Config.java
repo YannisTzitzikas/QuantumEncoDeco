@@ -4,8 +4,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Objects;
 
-import com.ics.codec.EncodingType;
-
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
  *  Class for configuration. It can store configuration details.
@@ -17,15 +15,15 @@ public final class Config {
     // Default values as constants
     private static final String             DEFAULT_INPUT_PATH  = "input.txt";
     private static final String             DEFAULT_OUTPUT_PATH = "output.txt";
-    private static final EncodingType       DEFAULT_ENCODING = EncodingType.R1;
+    private static final String             DEFAULT_ENCODING    = "R1";
 
     private final String                    inputPath;
     private final String                    outputPath;
-    private final EncodingType              encoding;
+    private final String                    encoding;
     private final Map<String, String>       parameters; 
 
     //----- Constructors ----- //
-    private Config(String inputPath, String outputPath, EncodingType encoding, Map<String, String> parameters) {
+    private Config(String inputPath, String outputPath, String encoding, Map<String, String> parameters) {
         this.inputPath = inputPath;
         this.outputPath = outputPath;
         this.encoding = encoding;
@@ -34,9 +32,9 @@ public final class Config {
 
     //----- Builder Pattern ----- //
     public static class Builder {
-        private String inputFilePath = DEFAULT_INPUT_PATH;
+        private String inputFilePath  = DEFAULT_INPUT_PATH;
         private String outputFilePath = DEFAULT_OUTPUT_PATH;
-        private EncodingType encoding = DEFAULT_ENCODING;
+        private String encoding       = DEFAULT_ENCODING;
         private Map<String, String> parameters = new HashMap<>();
 
         public Builder withInputFilePath(String path) {
@@ -49,7 +47,7 @@ public final class Config {
             return this;
         }
 
-        public Builder withEncoding(EncodingType encoding) {
+        public Builder withEncoding(String encoding) {
             this.encoding = Objects.requireNonNull(encoding, "Encoding cannot be null");
             return this;
         }
@@ -73,7 +71,7 @@ public final class Config {
         return outputPath;
     }
 
-    public EncodingType getEncoding() {
+    public String getEncoding() {
         return encoding;
     }
 
