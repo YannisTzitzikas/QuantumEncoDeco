@@ -23,7 +23,4 @@
         </dependency>
         <!-- end -->
  </dependencies>
- <build>
-    <sourceDirectory>${project.basedir}/encodeco</sourceDirectory>
-</build>
  </project>

@@ -1,10 +1,10 @@
-package config;
+package com.ics.config;
 
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Objects;
 
-import codec.EncodingType;
+import com.ics.codec.EncodingType;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)

@@ -1,4 +1,4 @@
-package readers;
+package com.ics.readers;
 
 public class ReaderFactory {
 

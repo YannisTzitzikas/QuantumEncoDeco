@@ -1,4 +1,4 @@
-package config;
+package com.ics.config;
 
 import java.io.File;
 import java.nio.file.Path;

@@ -1,8 +1,8 @@
 /**
  * 
  */
-package clients;
-import Ppipeline.Pipeline;
+package com.ics.clients;
+import com.ics.Ppipeline.Pipeline;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)

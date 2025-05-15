@@ -1,14 +1,14 @@
 /**
  * 
  */
-package Ppipeline;
+package com.ics.Ppipeline;
 
 import java.io.IOException;
 
-import config.AConfig;
-import readers.BReader;
+import com.ics.config.AConfig;
+import com.ics.readers.BReader;
 //import Ctransformers.Rule;
-import writters.EWritter;
+import com.ics.writters.EWritter;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)

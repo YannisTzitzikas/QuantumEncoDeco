@@ -1,4 +1,4 @@
-package codec;
+package com.ics.codec;
 
 public enum EncodingType {
     R1, 

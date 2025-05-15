@@ -1,7 +1,7 @@
 /**
  * 
  */
-package config;
+package com.ics.config;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
