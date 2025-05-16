@@ -3,19 +3,15 @@ package com.ics.io.readers;
 import java.io.IOException;
 
 public class ReaderFactory {
-    
     public static RecordReader getReader(String filePath) throws IOException {
+        String extension = filePath.toLowerCase().substring(filePath.lastIndexOf('.'));
         
-        String extension =  filePath
-                            .toLowerCase()
-                            .substring(filePath.lastIndexOf('.'));
-
-        if (extension == ".csv") {
+        if (extension.equals(".csv")) {
             return new CSVRecordReader();
-        } else if (extension == ".rdf" || extension == ".xml") {
+        } else if (extension.equals(".rdf") || extension.equals(".xml")) {
             return new RDFXMLRecordReader();
         } else {
-            throw new IllegalArgumentException("Unsupported file format: " + filePath);
+            throw new IllegalArgumentException("Unsupported format: " + filePath);
         }
     }
 }

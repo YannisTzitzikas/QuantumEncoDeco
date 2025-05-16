@@ -2,7 +2,6 @@ package com.ics.config;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Objects;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
@@ -16,49 +15,58 @@ public final class Config {
     private static final String             DEFAULT_INPUT_PATH  = "input.txt";
     private static final String             DEFAULT_OUTPUT_PATH = "output.txt";
     private static final String             DEFAULT_ENCODING    = "R1";
+    private static final boolean            DEFAULT_MODE        = false;
 
     private final String                    inputPath;
     private final String                    outputPath;
     private final String                    encoding;
+    private final boolean                   mode;
     private final Map<String, String>       parameters; 
 
     //----- Constructors ----- //
-    private Config(String inputPath, String outputPath, String encoding, Map<String, String> parameters) {
+    private Config(String inputPath, String outputPath, String encoding, boolean mode, Map<String, String> parameters) {
         this.inputPath  = inputPath;
         this.outputPath = outputPath;
         this.encoding   = encoding;
         this.parameters = parameters;
+        this.mode       = mode;
     }
 
     //----- Builder Pattern ----- //
     public static class Builder {
-        private String inputFilePath  = DEFAULT_INPUT_PATH;
-        private String outputFilePath = DEFAULT_OUTPUT_PATH;
-        private String encoding       = DEFAULT_ENCODING;
+        private String  inputFilePath  = DEFAULT_INPUT_PATH;
+        private String  outputFilePath = DEFAULT_OUTPUT_PATH;
+        private String  encoding       = DEFAULT_ENCODING;
+        private boolean mode           = DEFAULT_MODE;
         private Map<String, String> parameters = new HashMap<>();
 
         public Builder withInputFilePath(String path) {
-            this.inputFilePath = Objects.requireNonNull(path, "Input path cannot be null");
+            this.inputFilePath = (path != null) ? path : DEFAULT_INPUT_PATH;
             return this;
         }
-
+    
         public Builder withOutputFilePath(String path) {
-            this.outputFilePath = Objects.requireNonNull(path, "Output path cannot be null");
+            this.outputFilePath = (path != null) ? path : DEFAULT_OUTPUT_PATH;
             return this;
         }
-
+    
         public Builder withEncoding(String encoding) {
-            this.encoding = Objects.requireNonNull(encoding, "Encoding cannot be null");
+            this.encoding = (encoding != null) ? encoding : DEFAULT_ENCODING;
             return this;
         }
-
+    
         public Builder withParameters(Map<String, String> parameters) {
-            this.parameters = parameters;
+            this.parameters = (parameters != null) ? parameters : new HashMap<>();
             return this;
         }
-
+    
+        public Builder withMode(String mode) {
+            this.mode = "decode".equalsIgnoreCase(mode);
+            return this;
+        }
+    
         public Config build() {
-            return new Config(inputFilePath, outputFilePath, encoding, parameters);
+            return new Config(inputFilePath, outputFilePath, encoding, mode, parameters);
         }
     }
 
@@ -73,6 +81,10 @@ public final class Config {
 
     public String getEncoding() {
         return encoding;
+    }
+
+   public String getMode() {
+        return mode == false ? "encode" : "decode" ;
     }
 
     public Map<String, String> getParameters() {
@@ -91,6 +103,7 @@ public final class Config {
         builder.append("\tInput file: ").append(inputPath)
                .append("\n\tOutput file: ").append(outputPath)
                .append("\n\tEncoding: ").append(encoding)
+               .append("\n\tMode: ").append(getMode())
                .append("\n\tParameters: ").append(parameters);
         return builder.toString();
     }

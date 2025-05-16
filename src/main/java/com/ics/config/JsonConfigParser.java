@@ -81,11 +81,13 @@ public class JsonConfigParser implements ConfigParser {
         String inputFile  = (String) configObj.get("inputFile");
         String outputFile = (String) configObj.get("outputFile");
         String encoding   = (String) configObj.get("encoding");
+        String mode       = (String) configObj.get("mode");
 
         return new Config.Builder()
             .withInputFilePath(inputFile)
             .withOutputFilePath(outputFile)
             .withEncoding(encoding)
+            .withMode(mode)
             .build();
     }
 }

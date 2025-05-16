@@ -1,4 +1,4 @@
-package com.ics.codec;
+package com.ics.codec.encoding;
 
 import java.util.TreeMap;
 
@@ -7,7 +7,7 @@ import java.util.TreeMap;
 //               the first batch, then there is the possiblity
 //               that a repeated term gets a different id
 
-public class R1Encoder {
+public class R1Encoder implements Encoder {
     private final TreeMap<String, Integer> dictionary = new TreeMap<>();
     private int nextId = 0;
 
