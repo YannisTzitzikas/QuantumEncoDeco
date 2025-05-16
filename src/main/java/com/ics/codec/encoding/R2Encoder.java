@@ -3,7 +3,7 @@ package com.ics.codec.encoding;
 public class R2Encoder implements Encoder {
 
     @Override
-    public int encode(String element) {
+    public String encode(String element) {
         // TODO(gtheo): Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'encode'");
     }

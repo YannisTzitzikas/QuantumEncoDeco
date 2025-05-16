@@ -29,4 +29,9 @@ public class MemoryMonitor {
         
         return ((double) used / max * 100) >= threshold;
     }
+
+    // For immediate cleanup
+    public void triggerGarbageCollection() {
+        System.gc();
+    }
 }

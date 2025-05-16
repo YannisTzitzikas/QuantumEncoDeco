@@ -16,7 +16,7 @@ public class RDFXMLRecordReader implements RecordReader {
             model.read(in, null);
     
             // Process statements in parallel
-            model.listStatements().toList().parallelStream()
+            model.listStatements().toList().stream()
                 .map(stmt -> new Record(
                     stmt.getSubject().toString(),
                     stmt.getPredicate().toString(),

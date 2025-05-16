@@ -9,10 +9,10 @@ import java.util.TreeMap;
 
 public class R1Encoder implements Encoder {
     private final TreeMap<String, Integer> dictionary = new TreeMap<>();
-    private int nextId = 0;
+    private Integer nextId = 0;
 
-    public int encode(String element) {
-        return dictionary.computeIfAbsent(element, key -> nextId++);
+    public String encode(String element) {
+        return dictionary.computeIfAbsent(element, key -> nextId++).toString();
     }
 
     public TreeMap<String, Integer> getDictionary() {
