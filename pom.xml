@@ -23,4 +23,8 @@
         </dependency>
         <!-- end -->
  </dependencies>
+
+    <build>
+        <sourceDirectory>encodeco</sourceDirectory>
+    </build>
  </project>
