@@ -1,7 +1,10 @@
 package Ctransformers.encode;
 
-public interface IEncoder {
-    public int encode(String uri);
-    public void saveMappings(String filename);
+import java.util.Map;
 
+public interface IEncoder<T> {
+    T encode(String uri);
+    T getEncoded(String uri);
+    Map<String, T> getMappings();
+    void saveMappings(String filename);
 }

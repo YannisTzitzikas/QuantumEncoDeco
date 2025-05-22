@@ -1,32 +1,25 @@
 package Ctransformers.encode;
 
-import java.util.TreeMap;
-
 import Ewritters.EWritter;
 
-public class R1Encoder implements IEncoder {
-
-    private TreeMap<String, Integer> uriToId = new TreeMap<>();
-    private int currentId = 0;
+public class R1Encoder extends BaseEncoder<Integer> {
+    private int counter = 0;
 
     @Override
-    public int encode(String uri) {
-        return uriToId.computeIfAbsent(uri, k -> currentId++);
+    public Integer encode(String uri) {
+        String canonical = getCanonicalURI(uri);
+        return mappings.computeIfAbsent(canonical, k -> counter++);
     }
 
     @Override
     public void saveMappings(String filename) {
-        EWritter writer = new EWritter(filename);
-        int bitsNeeded  = bitsNeeded(currentId);
-        
-        uriToId.forEach((uri, id) -> writer.write(uri + "," + id + "\n"));
-        writer.close();
+        EWritter writter = new EWritter(filename);
+        mappings.forEach((key, value)-> writter.write(key + " " + value + "\n"));
+        writter.close();
     }
 
-    private static int bitsNeeded(int n) {
-        if (n == 0) {
-            return 1; // 0 requires 1 bit
-        }
-        return 32 - Integer.numberOfLeadingZeros(n);
+    @Override
+    public Integer getEncoded(String uri) {
+        return mappings.get(uri);
     }
 }

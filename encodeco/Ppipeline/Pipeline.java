@@ -4,12 +4,15 @@
 package Ppipeline;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
 import Aconfig.AConfig;
 import Breaders.BReader;
 import Breaders.OntologyReader;
+import Ctransformers.URITriple;
+import Ctransformers.encode.R1Encoder;
 //import Ctransformers.Rule;
 import Ewritters.EWritter;
 
@@ -83,13 +86,10 @@ public void transformDummy() {
 public void encodeTODO() {
 int linesWritten=0;
 if (isConfigurationOk() ) {
-	BReader r = new BReader(config.getInputfilepath());
-	EWritter w = new EWritter(config.getOutputfilepath());
 	OntologyReader or = new OntologyReader(); // reads a file
 	
-	w.writePrefix(); // Writing a prefix to the file
-		
-	String line;
+	List<URITriple> triples = or.readTriplesFromPath(config.getInputfilepath());
+    R1Encoder encoder = new R1Encoder();
 	try {
 		/*
 		 * R1: 
@@ -105,14 +105,57 @@ if (isConfigurationOk() ) {
 		 *  5/ gia test tha mporsouame kapou na kanoume kai decoding
 		 */
 		
+        triples.forEach((triple) -> {
+            encoder.encode(triple.getSubject());
+            encoder.encode(triple.getObject());
+            encoder.encode(triple.getPredicate());
+        });
+
+        encoder.saveMappings(config.getOutputfilepath() + ".map");
+        linesWritten = R1Writter(triples, encoder);
+
 	} catch (Exception e) {
 		e.printStackTrace();
 	}
-	r.close();
-	w.close();
 	System.out.println("Pipeline completed. Wrote " + linesWritten + " lines at the output file.");
 }		
 }	
+
+private int R1Writter(List<URITriple> triples, R1Encoder encoder)
+{
+    int count = encoder.getMappings().size();
+    int bitsNeeded = bitCount(count);
+	EWritter w = new EWritter(config.getOutputfilepath());
+
+    triples.forEach((triple) ->{
+
+        int s = encoder.getEncoded(triple.getSubject());
+        int o = encoder.getEncoded(triple.getObject());
+        int p = encoder.getEncoded(triple.getPredicate());
+
+        String sBinary = getBinaryRepresentation(s, bitsNeeded);
+        String oBinary = getBinaryRepresentation(o, bitsNeeded);
+        String pBinary = getBinaryRepresentation(p, bitsNeeded);
+
+        w.write(sBinary + oBinary + pBinary + "\n");
+    });
+    w.close();
+
+    return triples.size(); 
+}
+
+private int bitCount(int count){
+    if (count == 0) {
+        return 1; // 0 requires 1 bit
+    }
+    return 32 - Integer.numberOfLeadingZeros(count);
+}
+
+
+private String getBinaryRepresentation(int number, int bitsNeeded) {
+    String binaryString = Integer.toBinaryString(number);
+    return String.format("%" + bitsNeeded + "s", binaryString).replace(' ', '0');
+}
 		
 }
 
@@ -120,7 +163,7 @@ class PipelineClient {
 	public static void main(String[] lala) {
 		
 		Pipeline p = new Pipeline("Resources/configFiles/configAristotle.json");
-		p.transformDummy();
+		p.encodeTODO();
 		
 	}
 }
