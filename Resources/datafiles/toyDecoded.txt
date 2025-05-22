@@ -1,0 +1,9 @@
+Subject,Predicate,Object
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,http://www.w3.org/2002/07/owl#Ontology
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Aristotle,www.ics.forth.gr#livesAt,Athens
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Aristotle,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Person
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Aristotle,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,http://www.w3.org/2002/07/owl#NamedIndividual
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Person,http://www.w3.org/2000/01/rdf-schema#subClassOf,https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Mortal
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Person,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,http://www.w3.org/2002/07/owl#Class
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Mortal,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,http://www.w3.org/2002/07/owl#Class
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#livesAt,http://www.w3.org/1999/02/22-rdf-syntax-ns#type,http://www.w3.org/2002/07/owl#DatatypeProperty
