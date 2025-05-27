@@ -2,6 +2,6 @@
   {
   	"inputFile": "Resources/datafiles/Aristotle.xml",
   	"outputFile":"Resources/datafiles/toyOutput.txt",
-  	"encoding":"R2"
+  	"encoding":"R1"
   }
  ]

@@ -1,14 +1,17 @@
 package Ctransformers.encode;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+import Ctransformers.EncodingData;
 import Ewritters.EWritter;
 
 public class R1Encoder extends BaseEncoder<Integer> {
-    private int counter = 0;
+    private final AtomicInteger counter = new AtomicInteger(0);
 
     @Override
-    public Integer encode(String uri) {
-        String canonical = getCanonicalURI(uri);
-        return mappings.computeIfAbsent(canonical, k -> counter++);
+    public Integer encode(EncodingData data) {
+        String canonical = getCanonicalURI(data.getValue());
+        return mappings.computeIfAbsent(canonical, k -> counter.getAndIncrement());
     }
 
     @Override

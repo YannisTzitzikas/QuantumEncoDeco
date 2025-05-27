@@ -34,6 +34,10 @@ public class AConfig {
         return mappingFile;
     }
 
+    public String getEncoding() {
+        return encoding;
+    }
+
     public void setMappingFile(String mappingFile) {
         this.mappingFile = mappingFile;
     }
