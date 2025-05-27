@@ -1,0 +1,7 @@
+[
+  {
+  	"inputFile": "Resources/ontologies/CIDOC_CRM_v7.1.1.rdfs.xml",
+  	"outputFile":"Resources/datafiles/outputOntologies.txt",
+  	"encoding":"R1"
+  }
+ ]
