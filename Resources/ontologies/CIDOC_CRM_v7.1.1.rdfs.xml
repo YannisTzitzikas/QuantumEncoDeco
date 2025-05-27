@@ -4913,6 +4913,6 @@ This property is transitive.</rdfs:comment>
     <rdfs:label xml:lang="en">is held or supported by</rdfs:label>
     <rdfs:domain rdf:resource="E18_Physical_Thing" />
     <rdfs:range rdf:resource="E18_Physical_Thing" />
-    <owl:inverseOf rdf:resource="P198_holds_or_supports" />
+    <owl:inverseOf rdf:resource="P198_holds_or_supports" />  
   </rdf:Property>
 </rdf:RDF>
