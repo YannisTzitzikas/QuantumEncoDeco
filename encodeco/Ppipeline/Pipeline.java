@@ -3,6 +3,7 @@
  */
 package Ppipeline;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
@@ -68,7 +69,7 @@ public class Pipeline {
             
             String encodingType = config.getEncoding();
             OntologyReader or   = new OntologyReader(); 
-            List<URITriple> triples = or.readTriplesFromPath(encodingType);
+            List<URITriple> triples = or.readTriplesFromPath(config.getInputfilepath());
 
             EncoderFactory encoFactory = new EncoderFactory();
             IEncoder<?> encoder        = encoFactory.createEncoder(encodingType);

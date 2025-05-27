@@ -35,7 +35,9 @@ public class R2Writer implements IWriter {
                             getBinaryRepresentation(p, bitsNeeded) +
                             getBinaryRepresentation(o, bitsNeeded) + "\n");
         }
-
+        
+        writer.close();
+        
         return triples.size();
     }
 

@@ -36,6 +36,8 @@ public class R1Writer implements IWriter {
                             getBinaryRepresentation(o, bitsNeeded) + "\n");
         }
 
+        writer.close();
+
         return triples.size();
     }
 

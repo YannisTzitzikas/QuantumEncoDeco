@@ -3,7 +3,7 @@
   	"inputFile": "Resources/datafiles/toyOutput.txt",
   	"outputFile":"Resources/datafiles/toyDecoded.txt",
   	"mappingFile": "Resources/datafiles/toyOutput.txt.map",
-  	"encoding":"R1",
+  	"encoding":"R2",
     "mode":"decode"
   }
  ]
