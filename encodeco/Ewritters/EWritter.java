@@ -3,7 +3,8 @@
  */
 package Ewritters;
 
-import java.io.FileWriter;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
@@ -11,7 +12,7 @@ import java.io.FileWriter;
  *
  */
 public class EWritter {
-	  private FileWriter fr; 	
+	  private OutputStreamWriter fr; 	
 	  
 	  private String prefixHeaders = "";
 	  //private String prefixHeaders = "Row bits follow";
@@ -55,7 +56,7 @@ public class EWritter {
 	  }
 	  public EWritter(String fileName) {
 		  try {
-		  fr = new FileWriter(fileName,false); // overwrite file if it exists
+		  fr = new OutputStreamWriter(new FileOutputStream(fileName), "UTF-8");
 
 		  } catch (Exception e) {
 			  System.out.println(e);

@@ -32,16 +32,18 @@ public class R2Writer implements IWriter {
 
         for (URITriple triple : triples) {
             Integer s = enco.getEncoded(triple.getSubject(), TripleComponent.SUBJECT);
-            Integer o = enco.getEncoded(triple.getObject(),  TripleComponent.PREDICATE);
-            Integer p = enco.getEncoded(triple.getPredicate(),  TripleComponent.OBJECT);
+            Integer o = enco.getEncoded(triple.getObject(),  TripleComponent.OBJECT);
+            Integer p = enco.getEncoded(triple.getPredicate(),  TripleComponent.PREDICATE);
 
             if (s == null || o == null || p == null) {
                 throw new IllegalStateException("Failed to encode one or more components.");
             }
 
-            writer.write(getBinaryRepresentation(s, bitsNeededForEntities) +
-                         getBinaryRepresentation(p, bitsNeededForPredicates) +
-                         getBinaryRepresentation(o, bitsNeededForEntities) + "\n");
+            String encodedLine = getBinaryRepresentation(s, bitsNeededForEntities) +
+                                 getBinaryRepresentation(p, bitsNeededForPredicates) +
+                                 getBinaryRepresentation(o, bitsNeededForEntities) + "\n";
+
+            writer.write(encodedLine);
         }
         
         writer.close();

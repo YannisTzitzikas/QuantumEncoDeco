@@ -1,6 +1,7 @@
 package Ctransformers.decoder;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class R2Decoder implements IDecoder {
@@ -11,8 +12,14 @@ public class R2Decoder implements IDecoder {
 
     @Override
     public void loadMappings(String mappingFilePath) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(mappingFilePath))) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(mappingFilePath), StandardCharsets.UTF_8))) {
             String firstLine = reader.readLine();
+
+            // Handle UTF-8 BOM if present
+            if (firstLine != null && firstLine.startsWith("\uFEFF")) {
+                firstLine = firstLine.substring(1);
+            }
             if (firstLine == null || !firstLine.startsWith("R2")) {
                 throw new IOException("Invalid mapping file format: Missing type information in the first line.");
             }
@@ -31,47 +38,135 @@ public class R2Decoder implements IDecoder {
             entityMappings = new HashMap<>(entityCount);
 
             // Compute bit counts
-            predicateBitCount = (int) Math.ceil(Math.log(predicateCount) / Math.log(2));
-            entityBitCount = (int) Math.ceil(Math.log(entityCount) / Math.log(2));
+            predicateBitCount = bitCount(predicateCount);
+            entityBitCount = bitCount(entityCount);
 
+            StringBuilder currentEntry = new StringBuilder();
+            int predicatesLoaded = 0;
             String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(" ", 2);
-                if (parts.length == 2) {
+
+            while (predicatesLoaded < predicateCount && (line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                
+                if (currentEntry.length() > 0) {
+                    currentEntry.append("\n");
+                }
+                currentEntry.append(line);
+
+                // Check if the current buffer ends with a numeric ID
+                int lastSpace = currentEntry.lastIndexOf(" ");
+                if (lastSpace != -1) {
                     try {
-                        int id = Integer.parseInt(parts[1].trim()); // Ensure clean number parsing
-                        if (predicateMappings.size() < predicateCount) {
-                            predicateMappings.put(id, parts[0].trim()); // Trim URI
-                        } else {
-                            entityMappings.put(id, parts[0].trim());
-                        }
+                        String idPart = currentEntry.substring(lastSpace + 1).trim();
+                        int id = Integer.parseInt(idPart);
+                        
+                        // Found complete entry
+                        String value = currentEntry.substring(0, lastSpace).trim();
+                        predicateMappings.put(id, value);
+                        predicatesLoaded++;
+                        
+                        currentEntry.setLength(0);
                     } catch (NumberFormatException e) {
-                        System.err.println("Skipping invalid mapping line: " + line);
+                        // Not an ID - continue accumulating lines
                     }
                 }
+            }
+
+            if (predicatesLoaded != predicateCount) {
+                throw new IOException("Entity count mismatch. Expected: " + predicateCount + 
+                                      ", Loaded: " + predicatesLoaded);
+            }
+
+            // Read entities (can be multi-line)
+            StringBuilder currentEntity = new StringBuilder();
+            int entitiesLoaded = 0;
+
+            while (entitiesLoaded < entityCount && (line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                
+                if (currentEntry.length() > 0) {
+                    currentEntry.append("\n");
+                }
+                currentEntry.append(line);
+
+                // Check if the current buffer ends with a numeric ID
+                int lastSpace = currentEntry.lastIndexOf(" ");
+                if (lastSpace != -1) {
+                    try {
+                        String idPart = currentEntry.substring(lastSpace + 1).trim();
+                        int id = Integer.parseInt(idPart);
+                        
+                        // Found complete entry
+                        String value = currentEntry.substring(0, lastSpace).trim();
+                        entityMappings.put(id, value);
+                        entitiesLoaded++;
+                        
+                        currentEntry.setLength(0);
+                    } catch (NumberFormatException e) {
+                    }
+                }
+            }
+
+            if (currentEntity.length() > 0) {
+                int lastSpace = currentEntity.lastIndexOf(" ");
+                if (lastSpace != -1) {
+                    try {
+                        String idPart = currentEntity.substring(lastSpace + 1).trim();
+                        int id = Integer.parseInt(idPart);
+                        entityMappings.put(id, currentEntity.substring(0, lastSpace).trim());
+                        entitiesLoaded++;
+                    } catch (NumberFormatException e) {
+                        System.err.println(currentEntity.toString());
+                    }
+                }
+            }
+
+            if (entitiesLoaded != entityCount) {
+                throw new IOException("Entity count mismatch. Expected: " + entityCount + 
+                                      ", Loaded: " + entitiesLoaded);
             }
         }
     }
 
-
     @Override
     public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(encodedFilePath));
-             BufferedWriter writer = new BufferedWriter(new FileWriter(outputCsvPath))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(encodedFilePath), StandardCharsets.UTF_8));
+             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+                 new FileOutputStream(outputCsvPath), StandardCharsets.UTF_8))) {
 
-            writer.write("Subject,Predicate,Object\n"); // CSV Header
+            writer.write("Subject,Predicate,Object\n");
 
             String line;
             while ((line = reader.readLine()) != null) {
-                int totalBits = predicateBitCount + (2 * entityBitCount); // Assuming format: [Entity][Predicate][Entity]
-                
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                int totalBits = entityBitCount + predicateBitCount + entityBitCount;
                 if (line.length() != totalBits) {
-                    throw new IOException("Invalid encoded file format. Bit lengths do not match expected values.");
+                    throw new IOException("Invalid line length: " + line.length() + 
+                                         ". Expected: " + totalBits);
                 }
 
-                int s = Integer.parseInt(line.substring(0, entityBitCount), 2); // Binary to Integer
-                int p = Integer.parseInt(line.substring(entityBitCount, entityBitCount + predicateBitCount), 2);
-                int o = Integer.parseInt(line.substring(entityBitCount + predicateBitCount), 2);
+                // Parse subject
+                int s = 0;
+                if (entityBitCount > 0) {
+                    s = Integer.parseInt(line.substring(0, entityBitCount), 2);
+                }
+
+                // Parse predicate
+                int p = 0;
+                if (predicateBitCount > 0) {
+                    p = Integer.parseInt(line.substring(
+                        entityBitCount, entityBitCount + predicateBitCount), 2);
+                }
+
+                // Parse object
+                int o = 0;
+                if (entityBitCount > 0) {
+                    o = Integer.parseInt(line.substring(
+                        entityBitCount + predicateBitCount), 2);
+                }
 
                 // Lookup mappings
                 String subject = entityMappings.getOrDefault(s, "UNKNOWN");
@@ -82,5 +177,12 @@ public class R2Decoder implements IDecoder {
                 writer.write(subject + "," + predicate + "," + object + "\n");
             }
         }
+    }
+
+    private int bitCount(int count) {
+        if (count <= 1) {
+            return count; // 0 or 1 bit
+        }
+        return 32 - Integer.numberOfLeadingZeros(count - 1);
     }
 }

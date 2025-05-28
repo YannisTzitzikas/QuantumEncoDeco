@@ -31,5 +31,8 @@ public class R2Encoder extends BaseEncoder<Integer> {
         writer.write("R2, " + predicateCounter.get() + ", " + subjectObjectCounter.get() + "\n");
         predicateMappings.forEach((key, value) -> writer.write(key + " " + value + "\n"));
         entityMappings.forEach((key, value) -> writer.write(key + " " + value + "\n"));
+    
+        writer.close();
     }
+
 }

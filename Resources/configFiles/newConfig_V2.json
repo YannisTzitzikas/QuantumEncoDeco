@@ -1,8 +1,8 @@
 [
   {
   	"inputFile": "Resources/ontologies/CIDOC_CRM_v7.1.1.rdfs.xml",
-    "mappingFile":"Resources/datafiles/outputOntologies.map",
-  	"outputFile":"Resources/datafiles/outputOntologies.txt",
+    "mappingFile":"Resources/datafiles/outputOntologies_V2.map",
+  	"outputFile":"Resources/datafiles/outputOntologies_V2.txt",
   	"encoding":"R2"
   }
  ]
