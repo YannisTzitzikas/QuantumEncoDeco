@@ -2,13 +2,15 @@ package Ewritters;
 
 import java.util.List;
 
+import Ctransformers.StatisticsCollector;
+import Ctransformers.TripleComponent;
 import Ctransformers.URITriple;
 import Ctransformers.encode.IEncoder;
 import Ctransformers.encode.R2Encoder;
 
 public class R2Writer implements IWriter {
     @Override
-    public int write(List<URITriple> triples, IEncoder<?> encoder, String outputFile) {
+    public int write(List<URITriple> triples, IEncoder<?> encoder, StatisticsCollector collector ,String outputFile) {
 
         if(!(encoder instanceof R2Encoder))
         {
@@ -17,23 +19,29 @@ public class R2Writer implements IWriter {
 
         R2Encoder enco = (R2Encoder) encoder; 
 
-        int totalMappings = encoder.getMappings().size();
-        int bitsNeeded = bitCount(totalMappings);
+        int totalMappingsEntities = encoder.getMappings(TripleComponent.SUBJECT).size();
+        int totalMappingsPredicates = encoder.getMappings(TripleComponent.PREDICATE).size();
 
+        int bitsNeededForEntities = bitCount(totalMappingsEntities);
+        int bitsNeededForPredicates = bitCount(totalMappingsPredicates);
+        
+        collector.setBitsPerEntity(bitsNeededForEntities);
+        collector.setBitsPerPredicate(bitsNeededForPredicates);
+        
         EWritter writer = new EWritter(outputFile);
 
         for (URITriple triple : triples) {
-            Integer s = enco.getEncoded(triple.getSubject());
-            Integer o = enco.getEncoded(triple.getObject());
-            Integer p = enco.getEncoded(triple.getPredicate());
+            Integer s = enco.getEncoded(triple.getSubject(), TripleComponent.SUBJECT);
+            Integer o = enco.getEncoded(triple.getObject(),  TripleComponent.PREDICATE);
+            Integer p = enco.getEncoded(triple.getPredicate(),  TripleComponent.OBJECT);
 
             if (s == null || o == null || p == null) {
                 throw new IllegalStateException("Failed to encode one or more components.");
             }
 
-            writer.write(getBinaryRepresentation(s, bitsNeeded) +
-                            getBinaryRepresentation(p, bitsNeeded) +
-                            getBinaryRepresentation(o, bitsNeeded) + "\n");
+            writer.write(getBinaryRepresentation(s, bitsNeededForEntities) +
+                         getBinaryRepresentation(p, bitsNeededForPredicates) +
+                         getBinaryRepresentation(o, bitsNeededForEntities) + "\n");
         }
         
         writer.close();

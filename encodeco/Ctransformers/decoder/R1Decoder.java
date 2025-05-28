@@ -3,13 +3,17 @@ package Ctransformers.decoder;
 import java.io.*;
 import java.util.*;
 
-public class R1Decoder {
+public class R1Decoder implements IDecoder {
+    private final Map<Integer, String> mapping = new HashMap<>();
 
-    // HashMap to store mappings
-    private Map<Integer, String> mapping = new HashMap<>();
-
+    @Override
     public void loadMappings(String mappingFilePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(mappingFilePath))) {
+            String firstLine = reader.readLine();
+            if (firstLine == null || !firstLine.startsWith("R1 ")) {
+                throw new IOException("Invalid mapping file format: Missing type information in the first line.");
+            }
+
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(" ", 2); // Split into ID and URI
@@ -20,9 +24,10 @@ public class R1Decoder {
         }
     }
 
+    @Override
     public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(encodedFilePath));
-                BufferedWriter writer = new BufferedWriter(new FileWriter(outputCsvPath))) {
+             BufferedWriter writer = new BufferedWriter(new FileWriter(outputCsvPath))) {
 
             writer.write("Subject,Predicate,Object\n"); // CSV Header
 

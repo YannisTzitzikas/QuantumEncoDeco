@@ -3,7 +3,6 @@
  */
 package Ppipeline;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
@@ -11,8 +10,11 @@ import Aconfig.AConfig;
 import Breaders.OntologyReader;
 import Ctransformers.EncoderFactory;
 import Ctransformers.EncodingData;
+import Ctransformers.StatisticsCollector;
 import Ctransformers.TripleComponent;
 import Ctransformers.URITriple;
+import Ctransformers.decoder.DecoderFactory;
+import Ctransformers.decoder.IDecoder;
 import Ctransformers.decoder.R1Decoder;
 import Ctransformers.encode.IEncoder;
 import Ewritters.EncoderWriterFactory;
@@ -51,24 +53,25 @@ public class Pipeline {
         return true;
     }
 
-    public void decode()
-    {
-        R1Decoder decoder = new R1Decoder();
-
-        try {
-            decoder.loadMappings(config.getMappingFile());
-            decoder.decodeFile(config.getInputfilepath(),config.getOutputfilepath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+public void decode() {
+    try {
+        IDecoder decoder = DecoderFactory.createDecoder(config.getEncoding()); 
+        decoder.loadMappings(config.getMappingFile());
+        decoder.decodeFile(config.getInputfilepath(), config.getOutputfilepath());
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
+
 
     public void encode() {
         int linesWritten = 0;
         if (isConfigurationOk()) {
             
+            StatisticsCollector collector = new StatisticsCollector();
             String encodingType = config.getEncoding();
-            OntologyReader or   = new OntologyReader(); 
+            OntologyReader or   = new OntologyReader(collector); 
+
             List<URITriple> triples = or.readTriplesFromPath(config.getInputfilepath());
 
             EncoderFactory encoFactory = new EncoderFactory();
@@ -83,12 +86,13 @@ public class Pipeline {
                 });
 
                 encoder.saveMappings(config.getMappingFile());
-                linesWritten = writer.write(triples, encoder, config.getOutputfilepath());   
+                linesWritten = writer.write(triples, encoder, collector, config.getOutputfilepath());   
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
             System.out.println("Pipeline completed. Wrote " + linesWritten + " lines at the output file.");
+            System.out.println(collector);
         }
     }
 

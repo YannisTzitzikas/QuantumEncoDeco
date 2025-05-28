@@ -1,5 +1,7 @@
 package Breaders;
 
+import Ctransformers.StatisticsCollector;
+import Ctransformers.TripleComponent;
 import Ctransformers.URIFactory;
 import Ctransformers.URITriple;
 import org.apache.jena.rdf.model.*;
@@ -8,10 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OntologyReader {
+    private final StatisticsCollector stats;
     
-    /**
-     * Reads an RDF file and returns a list of URITriples
-     */
+    public OntologyReader(StatisticsCollector stats) {
+        this.stats = stats;
+    }
+
     public List<URITriple> readTriplesFromPath(String filename) {
         List<URITriple> triples = new ArrayList<>();
         Model model = ModelFactory.createDefaultModel();
@@ -20,21 +24,42 @@ public class OntologyReader {
         StmtIterator iter = model.listStatements();
         while (iter.hasNext()) {
             Statement stmt = iter.nextStatement();
-            triples.add(createTriple(stmt));
+            URITriple triple = createTriple(stmt);
+            triples.add(triple);
+            
+            // Update statistics using canonical URIs
+            stats.recordTriple();
+            stats.recordComponent(triple.getSubject(), TripleComponent.SUBJECT);
+            stats.recordComponent(triple.getPredicate(), TripleComponent.PREDICATE);
+            stats.recordComponent(triple.getObject(), TripleComponent.OBJECT);
         }
         return triples;
     }
 
     private URITriple createTriple(Statement stmt) {
-        String subject = URIFactory.getURI(stmt.getSubject().getURI());
-        String predicate = URIFactory.getURI(stmt.getPredicate().getURI());
-        
+        Resource subjectRes = stmt.getSubject();
+        Property predicateProp = stmt.getPredicate();
         RDFNode objectNode = stmt.getObject();
-        String object = objectNode.isResource() 
-            ? URIFactory.getURI(objectNode.asResource().getURI())
-            : objectNode.asLiteral().getLexicalForm();
+        
+        // Use URIFactory for canonical URIs
+        String subject = URIFactory.getURI(subjectRes.getURI());
+        String predicate = URIFactory.getURI(predicateProp.getURI());
+        
+        String object;
+        if (objectNode.isResource()) {
+            object = URIFactory.getURI(objectNode.asResource().getURI());
+        } else {
+            Literal literal = objectNode.asLiteral();
+            object = literal.getLexicalForm();
+            
+            // Handle typed literals efficiently
+            if (literal.getDatatype() != null) {
+                object = object + "^^" + URIFactory.getURI(literal.getDatatypeURI());
+            } else if (literal.getLanguage() != null && !literal.getLanguage().isEmpty()) {
+                object = object + "@" + literal.getLanguage();
+            }
+        }
 
         return new URITriple(subject, predicate, object);
     }
-
 }
