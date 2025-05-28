@@ -1,0 +1,9 @@
+[
+  {
+  	"inputFile": "Resources/datafiles/outputOntologies.txt",
+  	"outputFile":"Resources/datafiles/DecodedOntologies.txt",
+    "mappingFile":"Resources/datafiles/outputOntologies.map",
+  	"encoding":"R2",
+    "mode":"decode"
+  }
+ ]

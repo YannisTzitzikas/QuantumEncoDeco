@@ -13,7 +13,7 @@ public class R2Decoder implements IDecoder {
     public void loadMappings(String mappingFilePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(mappingFilePath))) {
             String firstLine = reader.readLine();
-            if (firstLine == null || !firstLine.startsWith("R2 ")) {
+            if (firstLine == null || !firstLine.startsWith("R2")) {
                 throw new IOException("Invalid mapping file format: Missing type information in the first line.");
             }
 
@@ -23,8 +23,8 @@ public class R2Decoder implements IDecoder {
                 throw new IOException("Invalid mapping header format.");
             }
 
-            int predicateCount = Integer.parseInt(headerParts[1]);
-            int entityCount = Integer.parseInt(headerParts[2]);
+            int predicateCount = Integer.parseInt(headerParts[1].trim());
+            int entityCount = Integer.parseInt(headerParts[2].trim());
 
             // Preallocate HashMaps
             predicateMappings = new HashMap<>(predicateCount);
@@ -38,16 +38,21 @@ public class R2Decoder implements IDecoder {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(" ", 2);
                 if (parts.length == 2) {
-                    int id = Integer.parseInt(parts[1]);
-                    if (predicateMappings.size() < predicateCount) {
-                        predicateMappings.put(id, parts[0]);
-                    } else {
-                        entityMappings.put(id, parts[0]);
+                    try {
+                        int id = Integer.parseInt(parts[1].trim()); // Ensure clean number parsing
+                        if (predicateMappings.size() < predicateCount) {
+                            predicateMappings.put(id, parts[0].trim()); // Trim URI
+                        } else {
+                            entityMappings.put(id, parts[0].trim());
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("Skipping invalid mapping line: " + line);
                     }
                 }
             }
         }
     }
+
 
     @Override
     public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {

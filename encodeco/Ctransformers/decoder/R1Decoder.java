@@ -10,19 +10,25 @@ public class R1Decoder implements IDecoder {
     public void loadMappings(String mappingFilePath) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(mappingFilePath))) {
             String firstLine = reader.readLine();
-            if (firstLine == null || !firstLine.startsWith("R1 ")) {
+            if (firstLine == null || !firstLine.startsWith("R1")) {
                 throw new IOException("Invalid mapping file format: Missing type information in the first line.");
             }
 
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(" ", 2); // Split into ID and URI
+                String[] parts = line.split(" ", 2); // Ensure only two segments are extracted
                 if (parts.length == 2) {
-                    mapping.put(Integer.parseInt(parts[1]), parts[0]); // Store <ID, URI>
+                    try {
+                        int id = Integer.parseInt(parts[1].trim()); // Trim spaces & ensure it's a number
+                        mapping.put(id, parts[0]); // Store <ID, URI>
+                    } catch (NumberFormatException e) {
+                        System.err.println("Skipping invalid mapping line: " + line);
+                    }
                 }
             }
         }
     }
+
 
     @Override
     public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {

@@ -15,7 +15,6 @@ import Ctransformers.TripleComponent;
 import Ctransformers.URITriple;
 import Ctransformers.decoder.DecoderFactory;
 import Ctransformers.decoder.IDecoder;
-import Ctransformers.decoder.R1Decoder;
 import Ctransformers.encode.IEncoder;
 import Ewritters.EncoderWriterFactory;
 import Ewritters.IWriter;

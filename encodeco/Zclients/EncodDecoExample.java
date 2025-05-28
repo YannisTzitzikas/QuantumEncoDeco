@@ -18,8 +18,16 @@ public class EncodDecoExample {
 		Pipeline ep2 = new Pipeline("Resources/configFiles/newConfig.json");
 		ep2.process();
         		
-		// Pipeline ep3 = new Pipeline("Resources/configFiles/configAristotle_decode.json");
-		// ep3.process();
+		Pipeline ep3 = new Pipeline("Resources/configFiles/newConfig_decode.json");
+		ep3.process();
+
+        		
+		Pipeline ep4 = new Pipeline("Resources/configFiles/newConfig_V2.json");
+		ep4.process();
+        		
+		Pipeline ep5 = new Pipeline("Resources/configFiles/newConfig_decode_V2.json");
+		ep5.process();
+
 
 		System.out.print("EncoDeco: bye bye");
 
