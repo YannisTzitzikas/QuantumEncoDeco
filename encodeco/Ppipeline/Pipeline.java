@@ -16,8 +16,8 @@ import Ctransformers.URITriple;
 import Ctransformers.decoder.DecoderFactory;
 import Ctransformers.decoder.IDecoder;
 import Ctransformers.encode.IEncoder;
-import Ewritters.EncoderWriterFactory;
-import Ewritters.IWriter;
+import Ewritters.encoding.EncoderWriterFactory;
+import Ewritters.encoding.IEncodeWriter;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
@@ -75,7 +75,7 @@ public void decode() {
 
             EncoderFactory encoFactory = new EncoderFactory();
             IEncoder<?> encoder        = encoFactory.createEncoder(encodingType);
-            IWriter     writer         = EncoderWriterFactory.getWriter(encodingType);
+            IEncodeWriter writer       = EncoderWriterFactory.getWriter(encodingType);
 
             try {
                 triples.forEach((triple) -> {

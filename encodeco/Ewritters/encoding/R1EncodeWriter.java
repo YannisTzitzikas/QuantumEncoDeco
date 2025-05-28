@@ -1,4 +1,4 @@
-package Ewritters;
+package Ewritters.encoding;
 
 import java.util.List;
 
@@ -6,48 +6,44 @@ import Ctransformers.StatisticsCollector;
 import Ctransformers.TripleComponent;
 import Ctransformers.URITriple;
 import Ctransformers.encode.IEncoder;
-import Ctransformers.encode.R2Encoder;
+import Ctransformers.encode.R1Encoder;
+import Ewritters.EWritter;
 
-public class R2Writer implements IWriter {
+public class R1EncodeWriter implements IEncodeWriter {
     @Override
     public int write(List<URITriple> triples, IEncoder<?> encoder, StatisticsCollector collector ,String outputFile) {
 
-        if(!(encoder instanceof R2Encoder))
+        if(!(encoder instanceof R1Encoder))
         {
             throw new IllegalArgumentException("Encoder type missmatch.");
         }
 
-        R2Encoder enco = (R2Encoder) encoder; 
+        R1Encoder enco = (R1Encoder) encoder; 
 
-        int totalMappingsEntities = encoder.getMappings(TripleComponent.SUBJECT).size();
-        int totalMappingsPredicates = encoder.getMappings(TripleComponent.PREDICATE).size();
+        int totalMappings = encoder.getMappings(TripleComponent.OBJECT).size();
+        int bitsNeeded = bitCount(totalMappings);
 
-        int bitsNeededForEntities = bitCount(totalMappingsEntities);
-        int bitsNeededForPredicates = bitCount(totalMappingsPredicates);
-        
-        collector.setBitsPerEntity(bitsNeededForEntities);
-        collector.setBitsPerPredicate(bitsNeededForPredicates);
-        
+        collector.setBitsPerEntity(bitsNeeded);
+        collector.setBitsPerPredicate(bitsNeeded);
+
         EWritter writer = new EWritter(outputFile);
 
         for (URITriple triple : triples) {
             Integer s = enco.getEncoded(triple.getSubject(), TripleComponent.SUBJECT);
-            Integer o = enco.getEncoded(triple.getObject(),  TripleComponent.OBJECT);
-            Integer p = enco.getEncoded(triple.getPredicate(),  TripleComponent.PREDICATE);
+            Integer o = enco.getEncoded(triple.getObject(),  TripleComponent.PREDICATE);
+            Integer p = enco.getEncoded(triple.getPredicate(),  TripleComponent.OBJECT);
 
             if (s == null || o == null || p == null) {
                 throw new IllegalStateException("Failed to encode one or more components.");
             }
 
-            String encodedLine = getBinaryRepresentation(s, bitsNeededForEntities) +
-                                 getBinaryRepresentation(p, bitsNeededForPredicates) +
-                                 getBinaryRepresentation(o, bitsNeededForEntities) + "\n";
-
-            writer.write(encodedLine);
+            writer.write(getBinaryRepresentation(s, bitsNeeded) +
+                            getBinaryRepresentation(p, bitsNeeded) +
+                            getBinaryRepresentation(o, bitsNeeded) + "\n");
         }
-        
+
         writer.close();
-        
+
         return triples.size();
     }
 
