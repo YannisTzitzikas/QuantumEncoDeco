@@ -25,8 +25,10 @@ import org.json.simple.parser.ParseException;
 public class AConfig {
     private String inputfilepath;
     private String outputfilepath;
-    private String encoding = "R1";
     private String mappingFile;
+
+    private String outputFormat = "csv"; 
+    private String encoding = "R1";
     private String mode = "encode"; // Default to "encode"
 
     // Getters and Setters
@@ -36,6 +38,10 @@ public class AConfig {
 
     public String getEncoding() {
         return encoding;
+    }
+    
+    public String getOutputFormat() {
+        return outputFormat;
     }
 
     public void setMappingFile(String mappingFile) {
@@ -81,6 +87,7 @@ public class AConfig {
         files.put("encoding", encoding);
         files.put("mappingFile", mappingFile);
         files.put("mode", mode);
+        files.put("format", outputFormat);
 
         JSONArray configArray = new JSONArray();
         configArray.add(files);
@@ -111,7 +118,10 @@ public class AConfig {
             JSONObject oj = (JSONObject) configArray.get(0);
             inputfilepath = (String) oj.get("inputFile");
             outputfilepath = (String) oj.get("outputFile");
+            outputFormat = (String) oj.get("format");
             encoding = (String) oj.get("encoding");
+
+            if (outputFormat == null) outputFormat = "csv";
 
             // Read new parameters
             mappingFile = (String) oj.get("mappingFile");
@@ -136,9 +146,10 @@ public class AConfig {
     @Override
     public String toString() {
         return "\tInput file: " + inputfilepath + "\n" +
+                "\tMapping file: " + mappingFile + "\n" +
                 "\tOutput file: " + outputfilepath + "\n" +
                 "\tEncoding: " + encoding + "\n" +
-                "\tMapping file: " + mappingFile + "\n" +
+                "\tFormat: " + outputFormat + "\n" +
                 "\tMode: " + mode;
     }
 }

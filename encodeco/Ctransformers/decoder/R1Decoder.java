@@ -4,6 +4,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import Ewritters.triple.CSVTripleWriter;
+import Ewritters.triple.ITripleWriter;
+
 public class R1Decoder implements IDecoder {
     private Map<Integer, String> mapping;
 
@@ -82,23 +85,17 @@ public class R1Decoder implements IDecoder {
     }
 
     @Override
-    public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {
+    public void decodeFile(String encodedFilePath, ITripleWriter writer) throws IOException {
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(encodedFilePath), StandardCharsets.UTF_8));
-             BufferedWriter writer = new BufferedWriter(
-                 new OutputStreamWriter(new FileOutputStream(outputCsvPath), StandardCharsets.UTF_8))) {
-            
-            writer.write("Subject,Predicate,Object\n");
+                new InputStreamReader(new FileInputStream(encodedFilePath), StandardCharsets.UTF_8))) {
             
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty()) continue;
                 
-                // Validate line length is divisible by 3
                 if (line.length() % 3 != 0) {
-                    throw new IOException("Invalid line length: " + line.length() + 
-                                         ". Must be divisible by 3");
+                    throw new IOException("Invalid line length: " + line.length() + ". Must be divisible by 3");
                 }
                 
                 int segmentLength = line.length() / 3;
@@ -106,14 +103,22 @@ public class R1Decoder implements IDecoder {
                 int p = Integer.parseInt(line.substring(segmentLength, 2 * segmentLength), 2);
                 int o = Integer.parseInt(line.substring(2 * segmentLength), 2);
 
-                // Lookup mappings
-                String subject = mapping.getOrDefault(s, "UNKNOWN");
-                String predicate = mapping.getOrDefault(p, "UNKNOWN");
-                String object = mapping.getOrDefault(o, "UNKNOWN");
-
-                // Write to CSV
-                writer.write(subject + "," + predicate + "," + object + "\n");
+                writer.write(
+                    mapping.getOrDefault(s, "UNKNOWN"),
+                    mapping.getOrDefault(p, "UNKNOWN"),
+                    mapping.getOrDefault(o, "UNKNOWN")
+                );
             }
+        } finally {
+            writer.close();
         }
     }
+
+    @Override
+    public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(outputCsvPath)) {
+            decodeFile(encodedFilePath, new CSVTripleWriter(fos));
+        }
+    }
+
 }

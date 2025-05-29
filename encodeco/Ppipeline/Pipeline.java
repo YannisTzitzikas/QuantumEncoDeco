@@ -3,6 +3,7 @@
  */
 package Ppipeline;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -18,6 +19,8 @@ import Ctransformers.decoder.IDecoder;
 import Ctransformers.encode.IEncoder;
 import Ewritters.encoding.EncoderWriterFactory;
 import Ewritters.encoding.IEncodeWriter;
+import Ewritters.triple.ITripleWriter;
+import Ewritters.triple.TripleWriterFactory;
 
 /**
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
@@ -54,9 +57,12 @@ public class Pipeline {
 
 public void decode() {
     try {
-        IDecoder decoder = DecoderFactory.createDecoder(config.getEncoding()); 
+        isConfigurationOk();
+        IDecoder        decoder = DecoderFactory.createDecoder(config.getEncoding()); 
+        ITripleWriter   writer  = TripleWriterFactory.getWriter(config.getOutputFormat(),new FileOutputStream(config.getOutputfilepath()));
+
         decoder.loadMappings(config.getMappingFile());
-        decoder.decodeFile(config.getInputfilepath(), config.getOutputfilepath());
+        decoder.decodeFile(config.getInputfilepath(), writer);
     } catch (IOException e) {
         e.printStackTrace();
     }

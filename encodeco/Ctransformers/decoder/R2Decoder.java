@@ -4,6 +4,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import Ewritters.triple.CSVTripleWriter;
+import Ewritters.triple.ITripleWriter;
+
 public class R2Decoder implements IDecoder {
     private Map<Integer, String> predicateMappings;
     private Map<Integer, String> entityMappings;
@@ -128,60 +131,47 @@ public class R2Decoder implements IDecoder {
         }
     }
 
+    
     @Override
-    public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {
+    public void decodeFile(String encodedFilePath, ITripleWriter writer) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(encodedFilePath), StandardCharsets.UTF_8));
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-                 new FileOutputStream(outputCsvPath), StandardCharsets.UTF_8))) {
-
-            writer.write("Subject,Predicate,Object\n");
-
+                new FileInputStream(encodedFilePath), StandardCharsets.UTF_8))) {
+            
             String line;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty()) continue;
 
-                int totalBits = entityBitCount + predicateBitCount + entityBitCount;
-                if (line.length() != totalBits) {
+                if (line.length() != (entityBitCount + predicateBitCount + entityBitCount)) {
                     throw new IOException("Invalid line length: " + line.length() + 
-                                         ". Expected: " + totalBits);
+                                         ". Expected: " + (entityBitCount + predicateBitCount + entityBitCount));
                 }
 
-                // Parse subject
-                int s = 0;
-                if (entityBitCount > 0) {
-                    s = Integer.parseInt(line.substring(0, entityBitCount), 2);
-                }
+                int s = Integer.parseInt(line.substring(0, entityBitCount), 2);
+                int p = Integer.parseInt(line.substring(entityBitCount, entityBitCount + predicateBitCount), 2);
+                int o = Integer.parseInt(line.substring(entityBitCount + predicateBitCount), 2);
 
-                // Parse predicate
-                int p = 0;
-                if (predicateBitCount > 0) {
-                    p = Integer.parseInt(line.substring(
-                        entityBitCount, entityBitCount + predicateBitCount), 2);
-                }
-
-                // Parse object
-                int o = 0;
-                if (entityBitCount > 0) {
-                    o = Integer.parseInt(line.substring(
-                        entityBitCount + predicateBitCount), 2);
-                }
-
-                // Lookup mappings
-                String subject = entityMappings.getOrDefault(s, "UNKNOWN");
-                String predicate = predicateMappings.getOrDefault(p, "UNKNOWN");
-                String object = entityMappings.getOrDefault(o, "UNKNOWN");
-
-                // Write to CSV
-                writer.write(subject + "," + predicate + "," + object + "\n");
+                writer.write(
+                    entityMappings.getOrDefault(s, "UNKNOWN"),
+                    predicateMappings.getOrDefault(p, "UNKNOWN"),
+                    entityMappings.getOrDefault(o, "UNKNOWN")
+                );
             }
+        } finally {
+            writer.close();
+        }
+    }
+
+    @Override
+    public void decodeFile(String encodedFilePath, String outputCsvPath) throws IOException {
+        try (FileOutputStream fos = new FileOutputStream(outputCsvPath)) {
+            decodeFile(encodedFilePath, new CSVTripleWriter(fos));
         }
     }
 
     private int bitCount(int count) {
         if (count <= 1) {
-            return count; // 0 or 1 bit
+            return count; 
         }
         return 32 - Integer.numberOfLeadingZeros(count - 1);
     }

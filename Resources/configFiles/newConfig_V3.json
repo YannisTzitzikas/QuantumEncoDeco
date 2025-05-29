@@ -1,0 +1,8 @@
+[
+  {
+  	"inputFile": "Resources/datafiles/DecodedOntologies_V2.ttl",
+    "mappingFile":"Resources/datafiles/outputOntologies_V3.map",
+  	"outputFile":"Resources/datafiles/outputOntologies_V3.txt",
+  	"encoding":"R2"
+  }
+ ]

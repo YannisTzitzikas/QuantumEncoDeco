@@ -26,6 +26,12 @@ public class EncodDecoExample {
         		
 		Pipeline ep5 = new Pipeline("Resources/configFiles/newConfig_decode_V2.json");
 		ep5.process();
+
+            		
+		Pipeline ep6 = new Pipeline("Resources/configFiles/newConfig_V3.json");
+		ep6.process();
+
+        
 	}
 
 }
