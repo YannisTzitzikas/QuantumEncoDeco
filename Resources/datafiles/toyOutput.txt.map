@@ -1,0 +1,13 @@
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28 0
+http://www.w3.org/2002/07/owl#Ontology 1
+http://www.w3.org/1999/02/22-rdf-syntax-ns#type 2
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Aristotle 3
+Athens 4
+www.ics.forth.gr#livesAt 5
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Person 6
+http://www.w3.org/2002/07/owl#NamedIndividual 7
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#Mortal 8
+http://www.w3.org/2000/01/rdf-schema#subClassOf 9
+http://www.w3.org/2002/07/owl#Class 10
+https://www.ics.forth.gr/~tzitzik/2025/4/untitled-ontology-28/www.ics.forth.gr#livesAt 11
+http://www.w3.org/2002/07/owl#DatatypeProperty 12

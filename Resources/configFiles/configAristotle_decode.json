@@ -1,0 +1,9 @@
+[
+  {
+  	"inputFile": "Resources/datafiles/toyOutput.txt",
+  	"outputFile":"Resources/datafiles/toyDecoded.txt",
+  	"mappingFile": "Resources/datafiles/toyOutput.txt.map",
+  	"encoding":"R2",
+    "mode":"decode"
+  }
+ ]
