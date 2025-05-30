@@ -19,10 +19,6 @@ public class R2Decoder implements IDecoder {
                 new InputStreamReader(new FileInputStream(mappingFilePath), StandardCharsets.UTF_8))) {
             String firstLine = reader.readLine();
 
-            // Handle UTF-8 BOM if present
-            if (firstLine != null && firstLine.startsWith("\uFEFF")) {
-                firstLine = firstLine.substring(1);
-            }
             if (firstLine == null || !firstLine.startsWith("R2")) {
                 throw new IOException("Invalid mapping file format: Missing type information in the first line.");
             }
