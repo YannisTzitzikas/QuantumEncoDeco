@@ -1,0 +1,10 @@
+[
+  {
+  	"inputFile": "Resources/datafiles/CIDOC_CRM-Encoded.txt",
+    "mappingFile":"Resources/datafiles/CIDOC_CRM.map",
+  	"outputFile":"Resources/datafiles/CIDOC_CRM-Decoded.txt",
+  	"encoding":"R1",
+    "mode":"decode",
+    "format":"ttl"
+  }
+ ]

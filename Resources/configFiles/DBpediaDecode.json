@@ -1,0 +1,10 @@
+[
+  {
+  	"inputFile": "Resources/datafilesLocal/dbpedia-Encoded.txt",
+    "mappingFile":"Resources/datafilesLocal/dbpedia.map",
+  	"outputFile":"Resources/datafilesLocal/dbpedia-Decoded.txt",
+  	"encoding":"R1",
+    "mode":"decode",
+    "format":"ttl"
+  }
+ ]

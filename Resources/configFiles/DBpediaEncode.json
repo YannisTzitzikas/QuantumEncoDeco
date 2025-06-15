@@ -1,0 +1,8 @@
+[
+  {
+  	"inputFile": "Resources/datafilesLocal/dbpedia_2016-10.owl",
+    "mappingFile":"Resources/datafilesLocal/dbpedia.map",
+  	"outputFile":"Resources/datafilesLocal/dbpedia-Encoded.txt",
+  	"encoding":"R2"
+  }
+ ]
