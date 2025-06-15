@@ -16,13 +16,15 @@ import org.json.simple.parser.ParseException;
 /**
  * 
  * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
- *         Class for configuration. It can store/read a configuration in JSON
+ *         Class for configuring an encoding or decoding task. 
+ *         It can store/read a configuration in JSON
  *         format.
- *         In this way, we can have several configutation file
+ *         In this way, we can have several configuration file
  *         (instead of having to change the code to test an alternative
  *         configuration).
  */
 public class AConfig {
+	private String configFilePath ="Configuration not at file";
     private String inputfilepath;
     private String outputfilepath;
     private String mappingFile;
@@ -105,6 +107,7 @@ public class AConfig {
     }
 
     public AConfig(String filepath) {
+    	this.configFilePath = filepath;
         readConfigFile(filepath);
     }
 
@@ -145,7 +148,8 @@ public class AConfig {
 
     @Override
     public String toString() {
-        return "\tInput file: " + inputfilepath + "\n" +
+        return  "\tConfig file path: " + configFilePath  + "\n" +
+        		"\tInput file: " + inputfilepath + "\n" +
                 "\tMapping file: " + mappingFile + "\n" +
                 "\tOutput file: " + outputfilepath + "\n" +
                 "\tEncoding: " + encoding + "\n" +

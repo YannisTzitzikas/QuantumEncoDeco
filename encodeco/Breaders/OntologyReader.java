@@ -59,6 +59,11 @@ public class OntologyReader {
                 object = object + "@" + literal.getLanguage();
             }
         }
+        
+        // checking if all components are not null
+        if ((subject==null) || (predicate==null) || (object==null)) {
+        	new IllegalArgumentException("Cannot create triple because one of s,p,o is null ");
+        }
 
         return new URITriple(subject, predicate, object);
     }

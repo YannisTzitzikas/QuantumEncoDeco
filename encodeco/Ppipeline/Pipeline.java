@@ -49,6 +49,7 @@ public class Pipeline {
         if (config == null) {
             throw new RuntimeException("Pipeline without config file");
         }
+        //System.out.println("\nPipeline config:" config.lala);
         System.out.println("\nPipeline start.");
         System.out.println("\nPipeline configuration:");
         System.out.println(config);
@@ -103,6 +104,8 @@ public void decode() {
 
     public void process()
     {
+    	long startTime = System.nanoTime(); // Start timer
+    	
         if(config.getMode().equals("encode"))
         {
             encode();
@@ -111,5 +114,13 @@ public void decode() {
         {
             decode();
         }
+        long endTime = System.nanoTime();   // End timer
+        long duration = endTime - startTime; // Time in nanoseconds
+
+        System.out.println("Execution time: " + duration + " nanoseconds");
+        System.out.println("Execution time: " + (duration / 1_000_000) + " milliseconds");
+        System.out.println("Execution time: " + (((0.0)+ duration) / 1_000_000_000) + " seconds");
+        System.out.println("Execution time: " + ((((0.0)+ duration) / 1_000_000_000) / 60) + " minutes");
+        
     }
 }

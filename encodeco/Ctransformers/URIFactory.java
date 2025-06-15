@@ -13,7 +13,19 @@ public class URIFactory {
      * Returns a shared instance of the URI string
      */
     public static String getURI(String uri) {
-        return URI_POOL.computeIfAbsent(uri, k -> k);
+    	
+    	if (uri != null && !uri.isEmpty()) {
+    			return URI_POOL.computeIfAbsent(uri, k -> k);
+    	} else {
+    		//System.out.println("Problem with a URI!");
+    		//new IllegalArgumentException("null parameter");
+    	}
+    	return "EMPTYURI";
+    	
+    	//if (uri==null) {
+    	//	new IllegalArgumentException("null parameter");
+    	//}
+        //return URI_POOL.computeIfAbsent(uri, k -> k);
     }
 
     /**
