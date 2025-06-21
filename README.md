@@ -9,7 +9,7 @@ A Java framework for __encoding__ Knowledge Graphs (represented in RDF) as numer
 See the examples in the package ZClients
 
 ## How to Cite
-This framework is described in the following publication:
+This framework is described in the following publication (under review):
 ```
 @inproceedings{tzitzikas2025Quantum,
   title={Knowledge Graphs and Quantum Computing:  First Blood},
