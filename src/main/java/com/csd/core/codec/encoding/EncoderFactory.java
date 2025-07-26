@@ -1,6 +1,6 @@
-package com.csd.codec.encoding;
+package com.csd.core.codec.encoding;
 
-import com.csd.codec.EncodingType;
+import com.csd.core.codec.EncodingType;
 
 public class EncoderFactory {
 

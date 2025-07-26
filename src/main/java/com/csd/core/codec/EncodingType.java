@@ -1,4 +1,4 @@
-package com.csd.codec;
+package com.csd.core.codec;
 
 public enum EncodingType {
     R1, 

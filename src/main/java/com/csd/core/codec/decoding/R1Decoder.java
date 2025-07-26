@@ -1,4 +1,4 @@
-package com.csd.codec.decoding;
+package com.csd.core.codec.decoding;
 
 import java.util.TreeMap;
 

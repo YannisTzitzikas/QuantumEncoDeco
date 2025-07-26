@@ -1,9 +1,9 @@
-package com.csd.codec.encoding;
+package com.csd.core.codec.decoding;
 
-public class R2Encoder implements Encoder {
+public class R2Decoder implements Decoder {
 
     @Override
-    public String encode(String element) {
+    public int decode(String element) {
         // TODO(gtheo): Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'encode'");
     }
