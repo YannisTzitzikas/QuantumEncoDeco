@@ -5,7 +5,7 @@ import java.util.TreeMap;
 
 import com.csd.codec.encoding.Encoder;
 import com.csd.codec.encoding.EncoderFactory;
-import com.csd.config.Config;
+import com.csd.core.config.Config;
 import com.csd.services.BatchSizeMonitor;
 
 import java.util.LinkedHashMap;

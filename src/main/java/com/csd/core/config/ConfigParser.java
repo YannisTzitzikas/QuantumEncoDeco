@@ -1,4 +1,4 @@
-package com.csd.config;
+package com.csd.core.config;
 
 import java.io.File;
 import java.nio.file.Path;
