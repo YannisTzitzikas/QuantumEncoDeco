@@ -21,7 +21,7 @@ public final class Config {
     private static final String             DEFAULT_FILE_FILTER = "*";
     private static final String             DEFAULT_ENCODING    = "R1";
 
-    private static final int                DEFAULT_BUFFER_SIZE = 0x400;
+    private static final int                DEFAULT_BUFFER_SIZE = 0x2000;
     private static final boolean            DEFAULT_MODE        = false;    // encode == false ; decode == true
     private static final boolean            DEFAULT_OVERWRITE   = false;
     private static final NamingStrategy     DEFAULT_NAME_STRAT  = NamingStrategy.SUFFIX_MODE;
@@ -64,50 +64,83 @@ public final class Config {
 
     //----- Builder Pattern ----- //
     public static class Builder {
-        private Path    inputPath               = Paths.get(DEFAULT_INPUT_PATH);
-        private Path    outputPath              = Paths.get(DEFAULT_OUTPUT_PATH);
-        private Path    mappingsPath            = Paths.get(DEFAULT_MAP_PATH);
+        private Path    inputPath                = Paths.get(DEFAULT_INPUT_PATH);
+        private Path    outputPath               = Paths.get(DEFAULT_OUTPUT_PATH);
+        private Path    mappingsPath             = Paths.get(DEFAULT_MAP_PATH);
 
-        private String fileFilterPattern        = DEFAULT_FILE_FILTER;
-        private String  encoding                = DEFAULT_ENCODING;
-        private boolean mode                    = DEFAULT_MODE;
+        private String  fileFilterPattern        = DEFAULT_FILE_FILTER;
+        private String  encoding                 = DEFAULT_ENCODING;
+        private boolean mode                     = DEFAULT_MODE;
 
-        private NamingStrategy namingStrategy   = DEFAULT_NAME_STRAT;
-        private boolean overwriteExisting       = DEFAULT_OVERWRITE;
-        private int bufferSize                  = DEFAULT_BUFFER_SIZE;
+        private NamingStrategy namingStrategy    = DEFAULT_NAME_STRAT;
+        private boolean        overwriteExisting = DEFAULT_OVERWRITE;
+        private int            bufferSize        = DEFAULT_BUFFER_SIZE;
         
         private Map<String, String> parameters = new HashMap<>();
 
-        public Builder withInputFilePath(String path) {
-            this.inputPath = (path != null) ? Paths.get(path) : inputPath;
+        public Builder withInputPath(String path) {
+            if(path != null) this.inputPath = Paths.get(path);
             return this;
         }
     
-        public Builder withOutputFilePath(String path) {
-            this.outputPath = (path != null) ? Paths.get(path) : outputPath;
+        public Builder withOutputPath(String path) {
+            if(path != null) this.outputPath = Paths.get(path);
             return this;
         }
         
-        public Builder withMappingFilePath(String path) {
-            this.mappingsPath = (path != null) ? Paths.get(path) : mappingsPath;
+        public Builder withMappingPath(String path) {
+            if(path != null) this.mappingsPath = Paths.get(path);
             return this;
         }
     
         public Builder withEncoding(String encoding) {
-            this.encoding = (encoding != null) ? encoding : DEFAULT_ENCODING;
+            if (encoding != null) this.encoding = encoding;
             return this;
         }
-    
-        public Builder withParameters(Map<String, String> parameters) {
-            this.parameters = (parameters != null) ? parameters : new HashMap<>();
-            return this;
-        }
-    
+         
         public Builder withMode(String mode) {
-            this.mode = "decode".equalsIgnoreCase(mode);
+            if (mode != null) this.mode = "decode".equalsIgnoreCase(mode);
             return this;
         }
-    
+
+        public Builder withFileType(String fileFilterPattern) {
+            if(fileFilterPattern != null) this.fileFilterPattern = fileFilterPattern;
+            return this;
+        }
+
+        public Builder withOverwrite(boolean overwriteExisting)
+        {
+            this.overwriteExisting = overwriteExisting;
+            return this;
+        }
+
+        public Builder withBufferSize(Integer bufferSize)
+        {
+            if(bufferSize != null) this.bufferSize = bufferSize;
+            return this;
+        }
+        
+        public Builder withNamingStrat(String namingStrategy)
+        {
+            if (namingStrategy == null) {
+                return this;
+            }
+
+            switch (namingStrategy.toUpperCase()) {
+                case "SUFFIX_MODE": this.namingStrategy = NamingStrategy.SUFFIX_MODE; break;
+                case "FIXED_NAME": this.namingStrategy = NamingStrategy.FIXED_NAME; break;
+                case "PRESERVE_HIERARCHY": this.namingStrategy = NamingStrategy.PRESERVE_HIERARCHY; break;
+                default: throw new IllegalArgumentException("Unknown naming strategy: " + namingStrategy);
+            }
+
+            return this;
+        }
+
+        public Builder withParameters(Map<String, String> parameters) {
+            if (parameters != null) this.parameters = parameters;
+            return this;
+        }
+
         public Config build() {
             return new Config(this);
         }
@@ -130,10 +163,26 @@ public final class Config {
         return encoding;
     }
 
-   public String getMode() {
+    public String getMode() {
         return mode == false ? "encode" : "decode" ;
     }
 
+    public String getFileFilterPattern() {
+        return fileFilterPattern;
+    }
+
+    public boolean doesOverwriteExisting() {
+        return overwriteExisting;
+    }
+
+    public int getBufferSize() {
+        return bufferSize;
+    }
+
+    public NamingStrategy getNamingStrategy() {
+        return namingStrategy;
+    }
+ 
     public Map<String, String> getParameters() {
         return parameters;
     }
@@ -150,7 +199,11 @@ public final class Config {
         builder.append("\tInput file: ").append(inputPath)
                .append("\n\tOutput file: ").append(outputPath)
                .append("\n\tEncoding: ").append(encoding)
-               .append("\n\tMode: ").append(getMode())
+               .append("\n\tMode: ").append(mode ? "DECODE" : "ENCODE")
+               .append("\n\tFile Filter Pattern: ").append(fileFilterPattern)
+               .append("\n\tOverwrite Existing: ").append(overwriteExisting)
+               .append("\n\tBuffer Size: ").append(bufferSize)
+               .append("\n\tNaming Strategy: ").append(namingStrategy)
                .append("\n\tParameters: ").append(parameters);
         return builder.toString();
     }

@@ -15,7 +15,7 @@ import org.json.simple.parser.ParseException;
 
 /**
  * 
- * @author Yannis Tzitzikas (yannistzitzik@gmail.com)
+ * @author George Theodorakis (csd4881@csd.uoc.gr)
  *  Class for configuration. It can read a configuration in JSON format.
  */
 public class JsonConfigParser implements ConfigParser {
@@ -44,7 +44,7 @@ public class JsonConfigParser implements ConfigParser {
         return parseConfig(new File(filePath)); // Convert String to File
     }
 
-        private List<Config> parseJson(File file) {
+    private List<Config> parseJson(File file) {
         List<Config> configList = new ArrayList<>();
 
         try (FileReader reader = new FileReader(file)) {
@@ -78,16 +78,30 @@ public class JsonConfigParser implements ConfigParser {
     }
 
     private Config parseConfigObject(JSONObject configObj) {
-        String inputFile  = (String) configObj.get("inputFile");
-        String outputFile = (String) configObj.get("outputFile");
-        String encoding   = (String) configObj.get("encoding");
-        String mode       = (String) configObj.get("mode");
 
+        String inputPath         = configObj.containsKey("input")       ? (String) configObj.get("input") : null;
+        String outputPath        = configObj.containsKey("output")      ? (String) configObj.get("output") : null;
+        String mappingsPath      = configObj.containsKey("mapping")     ? (String) configObj.get("mapping") : null;
+        String encoding          = configObj.containsKey("encoding")    ? (String) configObj.get("encoding") : null;
+        String fileFilterPattern = configObj.containsKey("format")      ? (String) configObj.get("format") : null;
+        String mode              = configObj.containsKey("mode")        ? (String) configObj.get("mode") : null;
+        String namingStrategy    = configObj.containsKey("namingStrat") ? (String) configObj.get("namingStrat") : null;
+        String parameters        = configObj.containsKey("params")      ? (String) configObj.get("params") : null; 
+
+        Integer bufferSize        = configObj.containsKey("bufferSize") ? (Integer) configObj.get("bufferSize") : null ;
+        boolean overwriteExisting = configObj.containsKey("overwrite")  ? (boolean) configObj.get("overwrite") : false ;
+
+        // TODO(gtheo): Add the option to pass various encoding-specific parameters 
         return new Config.Builder()
-            .withInputFilePath(inputFile)
-            .withOutputFilePath(outputFile)
+            .withInputPath(inputPath)
+            .withOutputPath(outputPath)
+            .withMappingPath(mappingsPath)
             .withEncoding(encoding)
             .withMode(mode)
+            .withBufferSize(bufferSize)
+            .withNamingStrat(namingStrategy)
+            .withNamingStrat(fileFilterPattern)
+            .withOverwrite(overwriteExisting)
             .build();
     }
 }
