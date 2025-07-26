@@ -88,7 +88,7 @@ public class JsonConfigParser implements ConfigParser {
         String namingStrategy    = configObj.containsKey("namingStrat") ? (String) configObj.get("namingStrat") : null;
         String parameters        = configObj.containsKey("params")      ? (String) configObj.get("params") : null; 
 
-        Integer bufferSize        = configObj.containsKey("bufferSize") ? (Integer) configObj.get("bufferSize") : null ;
+        Long bufferSize           = configObj.containsKey("bufferSize") ? (Long) configObj.get("bufferSize") : null ;
         boolean overwriteExisting = configObj.containsKey("overwrite")  ? (boolean) configObj.get("overwrite") : false ;
 
         // TODO(gtheo): Add the option to pass various encoding-specific parameters 
@@ -100,7 +100,7 @@ public class JsonConfigParser implements ConfigParser {
             .withMode(mode)
             .withBufferSize(bufferSize)
             .withNamingStrat(namingStrategy)
-            .withNamingStrat(fileFilterPattern)
+            .withFileType(fileFilterPattern)
             .withOverwrite(overwriteExisting)
             .build();
     }

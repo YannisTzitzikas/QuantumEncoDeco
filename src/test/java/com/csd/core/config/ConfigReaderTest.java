@@ -1,0 +1,30 @@
+package com.csd.core.config;
+
+import org.junit.Test;
+import java.util.List;
+import static org.junit.Assert.*;
+
+public class ConfigReaderTest {
+
+    @Test
+    public void testConfigParsingFromJson() {
+        ConfigParser parser = ConfigParserFactory.createParser("src/test/resources/test.json");
+        assertEquals(parser.getClass(), JsonConfigParser.class);
+
+        List<Config> configs = parser.parseConfig("src/test/resources/test.json");
+
+        assertNotNull(configs);
+        assertEquals(3, configs.size());
+
+        Config first = configs.get(0);
+        assertEquals("data\\input\\job1.txt", first.getInputPath().toString());
+        assertEquals("data\\output\\job1_encoded.txt", first.getOutputPath().toString());
+        assertEquals("data\\mappings\\job1.map", first.getMappingsPath().toString());
+        assertEquals("customCodecA", first.getEncoding());
+        assertEquals("*.txt", first.getFileFilterPattern());
+        assertEquals("encode", first.getMode());
+        assertEquals(Config.NamingStrategy.SUFFIX_MODE, first.getNamingStrategy());
+        assertTrue(first.doesOverwriteExisting());
+        assertEquals(4096, first.getBufferSize());
+    }
+}

@@ -21,7 +21,7 @@ public final class Config {
     private static final String             DEFAULT_FILE_FILTER = "*";
     private static final String             DEFAULT_ENCODING    = "R1";
 
-    private static final int                DEFAULT_BUFFER_SIZE = 0x2000;
+    private static final long               DEFAULT_BUFFER_SIZE = 0x2000;
     private static final boolean            DEFAULT_MODE        = false;    // encode == false ; decode == true
     private static final boolean            DEFAULT_OVERWRITE   = false;
     private static final NamingStrategy     DEFAULT_NAME_STRAT  = NamingStrategy.SUFFIX_MODE;
@@ -38,7 +38,7 @@ public final class Config {
     private final boolean                   mode;
     private final boolean                   overwriteExisting;  
 
-    private final int                       bufferSize;
+    private final long                      bufferSize;
     private final NamingStrategy            namingStrategy;
     private final Map<String, String>       parameters; 
 
@@ -74,7 +74,7 @@ public final class Config {
 
         private NamingStrategy namingStrategy    = DEFAULT_NAME_STRAT;
         private boolean        overwriteExisting = DEFAULT_OVERWRITE;
-        private int            bufferSize        = DEFAULT_BUFFER_SIZE;
+        private long           bufferSize        = DEFAULT_BUFFER_SIZE;
         
         private Map<String, String> parameters = new HashMap<>();
 
@@ -114,7 +114,7 @@ public final class Config {
             return this;
         }
 
-        public Builder withBufferSize(Integer bufferSize)
+        public Builder withBufferSize(Long bufferSize)
         {
             if(bufferSize != null) this.bufferSize = bufferSize;
             return this;
@@ -175,7 +175,7 @@ public final class Config {
         return overwriteExisting;
     }
 
-    public int getBufferSize() {
+    public long getBufferSize() {
         return bufferSize;
     }
 
