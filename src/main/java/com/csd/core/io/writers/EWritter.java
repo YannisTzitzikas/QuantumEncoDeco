@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.csd.io.writers;
+package com.csd.core.io.writers;
 
 import java.io.FileWriter;
 

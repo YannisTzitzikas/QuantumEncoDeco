@@ -1,4 +1,4 @@
-package com.csd.io.utils;
+package com.csd.core.io.utils;
 
 import java.io.File;
 import java.io.IOException;

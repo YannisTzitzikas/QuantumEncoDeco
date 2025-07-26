@@ -1,4 +1,4 @@
-package com.csd.io.readers;
+package com.csd.core.io.readers;
 
 import java.io.IOException;
 

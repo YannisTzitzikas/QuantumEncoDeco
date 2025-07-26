@@ -86,7 +86,7 @@ public class JsonConfigParser implements ConfigParser {
         String fileFilterPattern = configObj.containsKey("format")      ? (String) configObj.get("format") : null;
         String mode              = configObj.containsKey("mode")        ? (String) configObj.get("mode") : null;
         String namingStrategy    = configObj.containsKey("namingStrat") ? (String) configObj.get("namingStrat") : null;
-        String parameters        = configObj.containsKey("params")      ? (String) configObj.get("params") : null; 
+        //String parameters        = configObj.containsKey("params")      ? (String) configObj.get("params") : null; 
 
         Long bufferSize           = configObj.containsKey("bufferSize") ? (Long) configObj.get("bufferSize") : null ;
         boolean overwriteExisting = configObj.containsKey("overwrite")  ? (boolean) configObj.get("overwrite") : false ;

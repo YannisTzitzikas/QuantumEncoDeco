@@ -1,4 +1,4 @@
-package com.csd.model;
+package com.csd.core.model;
 
 import java.util.List;
 import java.util.Arrays;

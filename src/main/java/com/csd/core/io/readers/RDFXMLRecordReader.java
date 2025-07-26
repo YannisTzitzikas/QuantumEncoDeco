@@ -1,9 +1,9 @@
-package com.csd.io.readers;
+package com.csd.core.io.readers;
 
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RDFDataMgr;
 
-import com.csd.model.Record;
+import com.csd.core.model.Record;
 
 import java.io.InputStream;
 import java.util.function.Consumer;

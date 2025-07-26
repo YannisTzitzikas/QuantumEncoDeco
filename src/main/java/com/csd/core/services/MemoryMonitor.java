@@ -1,4 +1,4 @@
-package com.csd.services;
+package com.csd.core.services;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;

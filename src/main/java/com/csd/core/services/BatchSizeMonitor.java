@@ -1,4 +1,4 @@
-package com.csd.services;
+package com.csd.core.services;
 
 public class BatchSizeMonitor {
     

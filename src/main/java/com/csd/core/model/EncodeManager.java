@@ -1,4 +1,4 @@
-package com.csd.model;
+package com.csd.core.model;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -6,7 +6,7 @@ import java.util.TreeMap;
 import com.csd.codec.encoding.Encoder;
 import com.csd.codec.encoding.EncoderFactory;
 import com.csd.core.config.Config;
-import com.csd.services.BatchSizeMonitor;
+import com.csd.core.services.BatchSizeMonitor;
 
 import java.util.LinkedHashMap;
 

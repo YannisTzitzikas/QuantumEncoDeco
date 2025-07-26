@@ -1,4 +1,4 @@
-package com.csd.io.readers;
+package com.csd.core.io.readers;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import com.csd.model.Record;
+import com.csd.core.model.Record;
 
 public class CSVRecordReader implements RecordReader {
     public void readRecord(String filePath, Consumer<Record> processor) {
