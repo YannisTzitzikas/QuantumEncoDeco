@@ -2,49 +2,30 @@ package com.csd.core.io.readers;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.system.StreamRDF;
-import org.apache.jena.sparql.core.Quad;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.util.FileManager;
+
 import com.csd.core.model.URITriple;
 
-import java.io.InputStream;
 import java.util.function.Consumer;
 
 public class OntologyURIReader implements URIReader {
 
     @Override
     public void read(String filePath, Consumer<URITriple> processor) {
-        // Use Jena's streaming API for memory efficiency
-        StreamRDF stream = new StreamRDF() {
-            @Override
-            public void start() {}
-            
-            @Override
-            public void triple(Triple triple) {
-                processor.accept(createTriple(triple));
-            }
-            
-            @Override
-            public void quad(Quad quad) {
-                // Handle named graphs if needed
-            }
-            
-            @Override
-            public void base(String base) {}
-            
-            @Override
-            public void prefix(String prefix, String iri) {}
-            
-            @Override
-            public void finish() {}
-        };
+        Model model = ModelFactory.createDefaultModel();
+        FileManager.get().readModel(model, filePath);
         
-        // Auto-closing stream with proper error handling
-        try (InputStream in = RDFDataMgr.open(filePath)) {
-            RDFDataMgr.parse(stream, in, null);
-        } catch (Exception e) {
-            throw new RuntimeException("Error reading RDF file: " + filePath, e);
+        StmtIterator iter = model.listStatements();
+        while (iter.hasNext()) {
+            Statement stmt = iter.nextStatement();
+            URITriple triple = createTriple(stmt.asTriple());
+            processor.accept(triple);
         }
     }
 

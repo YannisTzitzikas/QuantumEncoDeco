@@ -8,10 +8,10 @@ public class ConfigReaderTest {
 
     @Test
     public void testConfigParsingFromJson() {
-        ConfigParser parser = ConfigParserFactory.createParser("src/test/resources/test.json");
+        ConfigParser parser = ConfigParserFactory.createParser("src/test/resources/ConfingReaderTest.json");
         assertEquals(parser.getClass(), JsonConfigParser.class);
 
-        List<Config> configs = parser.parseConfig("src/test/resources/test.json");
+        List<Config> configs = parser.parseConfig("src/test/resources/ConfingReaderTest.json");
 
         assertNotNull(configs);
         assertEquals(3, configs.size());
