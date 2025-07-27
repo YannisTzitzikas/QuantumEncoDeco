@@ -1,5 +1,7 @@
 package com.csd.core.storage;
 
+import com.csd.core.exception.StorageException;
+
 public interface StorageEngine<V> {
     void    put(String key, V value)    throws StorageException;
     V       get(String key)             throws StorageException;

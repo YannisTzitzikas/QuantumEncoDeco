@@ -1,20 +1,29 @@
 package com.csd.core.codex.encoder;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.csd.core.model.EncoderSettings;
 import com.csd.core.model.EncodingData;
-import com.csd.core.storage.StorageEngine;
 
-public class R1Encoder extends StatefulEncoder<Integer> {
+public class R1Encoder implements IEncoder<Integer> {
 
-    private final AtomicInteger counter = new AtomicInteger(0);
+    private final EncoderSettings   settings = new EncoderSettings(true, false, null); 
+    private final AtomicInteger     counter  = new AtomicInteger(0);
 
-    public R1Encoder(StorageEngine<Integer> engine) {
-        super(engine);
+    @Override
+    public Integer encode(EncodingData data) {
+        return counter.getAndIncrement();
     }
 
     @Override
-    protected Integer createEncoding(EncodingData data) {
-        return counter.getAndIncrement();
+    public EncoderSettings getSettings() {
+        return settings;
+    }
+
+    @Override
+    public void acceptParams(Map<String, Object> params) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'acceptParams'");
     }
 }

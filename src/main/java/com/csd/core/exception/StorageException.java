@@ -1,4 +1,4 @@
-package com.csd.core.storage;
+package com.csd.core.exception;
 
 public class StorageException extends Exception {
     public StorageException(String message, Throwable cause) {

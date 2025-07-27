@@ -1,12 +1,10 @@
 package com.csd.core.codex.encoder;
 
-import com.csd.core.storage.StorageEngine;
-
 public class EncodingFactory {
-        public static IEncoder<?> createEncoder(String encodingType, StorageEngine<?> storage) {
+        public static IEncoder<?> createEncoder(String encodingType) {
         switch (encodingType) {
-            case "R1": return new R1Encoder((StorageEngine<Integer>)storage);
-            case "R2": return new R2Encoder((StorageEngine<Integer>)storage);
+            case "R1": return new R1Encoder();
+            case "R2": return new R2Encoder();
             default: throw new IllegalArgumentException("Unknown encoder: " + encodingType);
         }
     }
