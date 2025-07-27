@@ -11,11 +11,6 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.googlecode.json-simple</groupId>
-            <artifactId>json-simple</artifactId>
-            <version>1.1.1</version>
-        </dependency>
         <!-- Apache Jena -->
         <!-- https://mvnrepository.com/artifact/org.apache.jena/jena-arq -->
         <dependency>
@@ -27,6 +22,11 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>            <!-- or the latest version -->
         </dependency>
         <!-- end -->
     </dependencies>

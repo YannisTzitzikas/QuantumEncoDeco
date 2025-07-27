@@ -1,5 +1,10 @@
 package com.csd.core.config;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -7,11 +12,6 @@ import java.nio.file.Path;
 
 import java.util.List;
 import java.util.ArrayList;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 /**
  * 
@@ -33,65 +33,53 @@ public class JsonConfigParser implements ConfigParser {
         if (filePath == null) {
             throw new IllegalArgumentException("File path cannot be null.");
         }
-        return parseConfig(filePath.toFile()); // Convert Path to File
+        return parseConfig(filePath.toFile());
     }
 
     @Override
     public List<Config> parseConfig(String filePath) {
-        if (filePath == null || filePath == "") {
+        if (filePath == null || filePath.isEmpty()) {
             throw new IllegalArgumentException("File path cannot be null or empty.");
         }
-        return parseConfig(new File(filePath)); // Convert String to File
+        return parseConfig(new File(filePath));
     }
 
     private List<Config> parseJson(File file) {
         List<Config> configList = new ArrayList<>();
 
         try (FileReader reader = new FileReader(file)) {
-            JSONParser jsonParser = new JSONParser();
-            Object parsedObj = jsonParser.parse(reader);
+            JsonElement root = JsonParser.parseReader(reader);
 
-            if (parsedObj instanceof JSONArray) {
-                JSONArray configArray = (JSONArray) parsedObj;
-                for (Object obj : configArray) {
-                    if (obj instanceof JSONObject) {
-                        configList.add(parseConfigObject((JSONObject) obj));
-                    }
+            if (root.isJsonArray()) {
+                JsonArray array = root.getAsJsonArray();
+                for (JsonElement element : array) {
+                    configList.add(parseConfigObject(element.getAsJsonObject()));
                 }
-            } else if (parsedObj instanceof JSONObject) {
-                configList.add(parseConfigObject((JSONObject) parsedObj));
+            } else if (root.isJsonObject()) {
+                configList.add(parseConfigObject(root.getAsJsonObject()));
             } else {
-                throw new RuntimeException("Unexpected JSON format. Expected JSONObject or JSONArray.");
+                throw new RuntimeException("Unexpected JSON format. Expected JsonObject or JsonArray.");
             }
 
-        } catch (IOException | ParseException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error parsing config file: " + e.getMessage(), e);
         }
 
         return configList;
     }
 
+    private Config parseConfigObject(JsonObject obj) {
+        String inputPath         = obj.has("input")       ? obj.get("input").getAsString()       : null;
+        String outputPath        = obj.has("output")      ? obj.get("output").getAsString()      : null;
+        String mappingsPath      = obj.has("mapping")     ? obj.get("mapping").getAsString()     : null;
+        String encoding          = obj.has("encoding")    ? obj.get("encoding").getAsString()    : null;
+        String fileFilterPattern = obj.has("format")      ? obj.get("format").getAsString()      : null;
+        String mode              = obj.has("mode")        ? obj.get("mode").getAsString()        : null;
+        String namingStrategy    = obj.has("namingStrat") ? obj.get("namingStrat").getAsString() : null;
 
-    // ----- Utilities ----- //
-    private boolean validateFile(File file) {
-        return file != null && file.exists() && file.isFile() && file.getName().toLowerCase().endsWith(".json");
-    }
+        Long bufferSize          = obj.has("bufferSize")  ? obj.get("bufferSize").getAsLong()    : null;
+        boolean overwriteExisting= obj.has("overwrite")   ? obj.get("overwrite").getAsBoolean()  : false;
 
-    private Config parseConfigObject(JSONObject configObj) {
-
-        String inputPath         = configObj.containsKey("input")       ? (String) configObj.get("input") : null;
-        String outputPath        = configObj.containsKey("output")      ? (String) configObj.get("output") : null;
-        String mappingsPath      = configObj.containsKey("mapping")     ? (String) configObj.get("mapping") : null;
-        String encoding          = configObj.containsKey("encoding")    ? (String) configObj.get("encoding") : null;
-        String fileFilterPattern = configObj.containsKey("format")      ? (String) configObj.get("format") : null;
-        String mode              = configObj.containsKey("mode")        ? (String) configObj.get("mode") : null;
-        String namingStrategy    = configObj.containsKey("namingStrat") ? (String) configObj.get("namingStrat") : null;
-        //String parameters        = configObj.containsKey("params")      ? (String) configObj.get("params") : null; 
-
-        Long bufferSize           = configObj.containsKey("bufferSize") ? (Long) configObj.get("bufferSize") : null ;
-        boolean overwriteExisting = configObj.containsKey("overwrite")  ? (boolean) configObj.get("overwrite") : false ;
-
-        // TODO(gtheo): Add the option to pass various encoding-specific parameters 
         return new Config.Builder()
             .withInputPath(inputPath)
             .withOutputPath(outputPath)
@@ -103,5 +91,9 @@ public class JsonConfigParser implements ConfigParser {
             .withFileType(fileFilterPattern)
             .withOverwrite(overwriteExisting)
             .build();
+    }
+
+    private boolean validateFile(File file) {
+        return file != null && file.exists() && file.isFile() && file.getName().toLowerCase().endsWith(".json");
     }
 }
