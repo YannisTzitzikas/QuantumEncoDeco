@@ -8,7 +8,7 @@ import com.csd.core.model.EncodingData;
 
 public class R1Encoder implements IEncoder<Integer> {
 
-    private final EncoderSettings   settings = new EncoderSettings(true, false, null); 
+    private final EncoderSettings   settings = new EncoderSettings(true, null); 
     private final AtomicInteger     counter  = new AtomicInteger(0);
 
     @Override
@@ -19,7 +19,7 @@ public class R1Encoder implements IEncoder<Integer> {
     @Override
     public EncoderSettings getSettings() {
         return settings;
-    }
+    } 
 
     @Override
     public void acceptParams(Map<String, Object> params) {

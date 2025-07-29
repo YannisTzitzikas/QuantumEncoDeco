@@ -8,7 +8,7 @@ import com.csd.core.model.EncodingData;
 
 public class R2Encoder implements IEncoder<Integer> {
 
-    private final EncoderSettings   settings         = new EncoderSettings(true, false, null); 
+    private final EncoderSettings   settings         = new EncoderSettings(true, null); 
 
     private final AtomicInteger     entityCounter    = new AtomicInteger(0);
     private final AtomicInteger     predicateCounter = new AtomicInteger(0);

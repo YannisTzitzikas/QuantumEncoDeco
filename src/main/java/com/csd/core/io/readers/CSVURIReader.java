@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import com.csd.core.model.URITriple;
 
 public class CSVURIReader implements URIReader {
-    public void read(String filePath, Consumer<URITriple> processor) {
+    public void stream(String filePath, Consumer<URITriple> processor) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             br.lines()
             .map(line -> line.split("\\s*,\\s*"))

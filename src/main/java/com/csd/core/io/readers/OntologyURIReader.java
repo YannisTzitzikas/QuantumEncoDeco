@@ -4,11 +4,10 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.util.FileManager;
+import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.system.StreamRDF;
+import org.apache.jena.riot.system.StreamRDFBase;
 
 import com.csd.core.model.URITriple;
 
@@ -17,16 +16,18 @@ import java.util.function.Consumer;
 public class OntologyURIReader implements URIReader {
 
     @Override
-    public void read(String filePath, Consumer<URITriple> processor) {
-        Model model = ModelFactory.createDefaultModel();
-        FileManager.get().readModel(model, filePath);
-        
-        StmtIterator iter = model.listStatements();
-        while (iter.hasNext()) {
-            Statement stmt = iter.nextStatement();
-            URITriple triple = createTriple(stmt.asTriple());
-            processor.accept(triple);
-        }
+    public void stream(String filePath, Consumer<URITriple> processor) {
+        StreamRDF stream = new StreamRDFBase() {
+            @Override
+            public void triple(Triple triple) {
+                URITriple uriTriple = createTriple(triple);
+                processor.accept(uriTriple);
+            }
+        };
+
+        RDFParser.source(filePath)
+                 .lang(RDFLanguages.filenameToLang(filePath))
+                 .parse(stream);
     }
 
     private URITriple createTriple(Triple triple) {

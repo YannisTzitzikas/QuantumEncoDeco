@@ -20,7 +20,7 @@ public class URIReaderTest {
 
             List<URITriple> triples = new ArrayList<>();
 
-            reader.read("src/test/resources/URIreaderTest.xml", triple -> {
+            reader.stream("src/test/resources/URIreaderTest.xml", triple -> {
                 triples.add(triple);
             });
 
