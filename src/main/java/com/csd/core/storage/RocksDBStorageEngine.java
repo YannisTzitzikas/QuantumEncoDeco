@@ -5,34 +5,29 @@ import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 
-import com.csd.core.utils.serializer.Serializer;
-
-public class RocksDBStorageEngine<V> implements StorageEngine<V> {
+public class RocksDBStorageEngine implements StorageEngine {
     private final RocksDB db;
-    private final Serializer<V> serializer;
     
-    public RocksDBStorageEngine(String dbPath, Serializer<V> serializer) throws RocksDBException {
+    public RocksDBStorageEngine(String dbPath) throws RocksDBException {
         RocksDB.loadLibrary();
-        this.serializer = serializer;
         Options options = new Options().setCreateIfMissing(true);
         this.db = RocksDB.open(options, dbPath);
     }
 
     @Override
-    public void put(String key, V value) throws StorageException {
+    public void put(String key, byte[] value) throws StorageException {
         try {
-            byte[] serialized = serializer.serialize(value);
-            db.put(key.getBytes(), serialized);
+            db.put(key.getBytes(), value);
         } catch (RocksDBException e) {
             throw new StorageException("Put operation failed", e);
         }
     }
 
     @Override
-    public V get(String key) throws StorageException {
+    public byte[] get(String key) throws StorageException {
         try {
             byte[] bytes = db.get(key.getBytes());
-            return bytes != null ? serializer.deserialize(bytes) : null;
+            return bytes;
         } catch (RocksDBException e) {
             throw new StorageException("Get operation failed", e);
         }
@@ -58,4 +53,5 @@ public class RocksDBStorageEngine<V> implements StorageEngine<V> {
     public void close() throws StorageException {
         db.close();
     }
+
 }

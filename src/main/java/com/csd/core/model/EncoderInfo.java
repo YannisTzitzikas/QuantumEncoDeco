@@ -20,8 +20,5 @@ public class EncoderInfo {
     public String getName() { return name; }
 
     public Map<String, Object> getDefaultParameters() {return defaultParameters; }
-    public Object getDefault(String key) { return defaultParameters.get(key); }
-    public <T> T getDefault(String key, Class<T> type) { return type.cast(defaultParameters.get(key)); }
-
 }
 

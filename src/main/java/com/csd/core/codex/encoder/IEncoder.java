@@ -6,12 +6,11 @@ import com.csd.core.model.EncodingData;
 
 public interface IEncoder<T> {
 
-    // TODO(gtheo): Check wether the getFinalEncoding return type causes issues
     T                   encode(EncodingData data);
     String              getFinalEncoding(EncodingData data);
 
-    void                setContext(EncodingContext<T> context);  // Set context explicitly
-    EncodingContext<T>  getContext();              // Retrieve context
+    void                setContext(EncodingContext context);  // Set context explicitly
+    EncodingContext     getContext();              
     EncoderInfo         getInfo();
 
 }

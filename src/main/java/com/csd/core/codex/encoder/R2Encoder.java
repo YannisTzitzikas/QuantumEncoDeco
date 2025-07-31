@@ -12,13 +12,18 @@ import com.csd.core.model.TripleComponent;
 import com.csd.core.model.EncodingContext.EncodingStatus;
 import com.csd.core.storage.StorageException;
 
+import com.csd.core.utils.serializer.Serializer;
+import com.csd.core.utils.serializer.IntegerSerializer;
+
 public class R2Encoder implements IEncoder<Integer> {
 
     private final EncoderInfo info;
     private final AtomicInteger predicateCounter;
     private final AtomicInteger entityCounter;
 
-    private EncodingContext<Integer> context;
+    private final Serializer<Integer> serializer;
+
+    private EncodingContext context;
 
     public R2Encoder() {
         Map<String, Object> defaults = new HashMap<>();
@@ -33,10 +38,12 @@ public class R2Encoder implements IEncoder<Integer> {
 
         predicateCounter = new AtomicInteger(0);
         entityCounter = new AtomicInteger(0);
+
+        serializer = new IntegerSerializer();
     }
 
     @Override
-    public void setContext(EncodingContext<Integer> context) {
+    public void setContext(EncodingContext context) {
         if (this.context != null && this.context.getStatus() == EncodingStatus.RUNNING) {
             System.err.println("Current encoding process is still running.");
             return;
@@ -56,7 +63,7 @@ public class R2Encoder implements IEncoder<Integer> {
     }
 
     @Override
-    public EncodingContext<Integer> getContext() {
+    public EncodingContext getContext() {
         return context;
     }
 
@@ -76,7 +83,7 @@ public class R2Encoder implements IEncoder<Integer> {
         String key = prefix + "::" + data.getValue();
 
         try {
-            Integer existingCode = context.getStorageEngine().get(key);
+            Integer existingCode = serializer.deserialize(context.getStorageEngine().get(key));
             if (existingCode != null) {
                 return existingCode;
             }
@@ -85,7 +92,7 @@ public class R2Encoder implements IEncoder<Integer> {
                     ? predicateCounter.getAndIncrement()
                     : entityCounter.getAndIncrement();
 
-            context.getStorageEngine().put(key, newCode);
+            context.getStorageEngine().put(key, serializer.serialize(newCode));
             return newCode;
         } catch (StorageException e) {
             throw new RuntimeException("Failed to access storage engine", e);
@@ -95,7 +102,6 @@ public class R2Encoder implements IEncoder<Integer> {
     @Override
     public String getFinalEncoding(EncodingData data) {
 
-        // TODO(gtheo): Create a logger
         if (context.getStatus() != EncodingStatus.DONE) {
             System.err.println("The encoding process is not finalized yet");
             return null;
