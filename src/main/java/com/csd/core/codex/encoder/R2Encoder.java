@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.csd.core.model.EncoderSettings;
 import com.csd.core.model.EncodingData;
+import com.csd.core.model.TripleComponent;
 
 public class R2Encoder implements IEncoder<Integer> {
 
@@ -15,7 +16,7 @@ public class R2Encoder implements IEncoder<Integer> {
 
     @Override
     public Integer encode(EncodingData data) {
-        return (data.getType() == EncodingData.TripleComponent.PREDICATE) ?
+        return (data.getType() == TripleComponent.PREDICATE) ?
                 predicateCounter.incrementAndGet() : entityCounter.incrementAndGet();
     }
 

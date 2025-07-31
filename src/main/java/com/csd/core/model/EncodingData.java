@@ -16,9 +16,4 @@ public class EncodingData {
     public TripleComponent getType() {
         return type;
     }
-
-    public enum TripleComponent
-    {
-        OBJECT, SUBJECT, PREDICATE
-    };
 }
