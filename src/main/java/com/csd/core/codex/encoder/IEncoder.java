@@ -1,12 +1,17 @@
 package com.csd.core.codex.encoder;
 
-import java.util.Map;
-
-import com.csd.core.model.EncoderSettings;
+import com.csd.core.model.EncoderInfo;
+import com.csd.core.model.EncodingContext;
 import com.csd.core.model.EncodingData;
 
 public interface IEncoder<T> {
-    T               encode(EncodingData data);
-    void            acceptParams(Map<String, Object> params);
-    EncoderSettings getSettings();
+
+    // TODO(gtheo): Check wether the getFinalEncoding return type causes issues
+    T                   encode(EncodingData data);
+    String              getFinalEncoding(EncodingData data);
+
+    void                setContext(EncodingContext<T> context);  // Set context explicitly
+    EncodingContext<T>  getContext();              // Retrieve context
+    EncoderInfo         getInfo();
+
 }

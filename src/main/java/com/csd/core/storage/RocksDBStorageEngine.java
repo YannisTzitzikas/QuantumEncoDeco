@@ -5,7 +5,6 @@ import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
 
-import com.csd.core.exception.StorageException;
 import com.csd.core.utils.serializer.Serializer;
 
 public class RocksDBStorageEngine<V> implements StorageEngine<V> {

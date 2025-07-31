@@ -1,32 +1,126 @@
 package com.csd.core.codex.encoder;
 
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.csd.core.model.EncoderSettings;
+import com.csd.core.model.EncoderInfo;
+import com.csd.core.model.EncodingContext;
 import com.csd.core.model.EncodingData;
 import com.csd.core.model.TripleComponent;
+import com.csd.core.model.EncodingContext.EncodingStatus;
+import com.csd.core.storage.StorageException;
 
 public class R2Encoder implements IEncoder<Integer> {
 
-    private final EncoderSettings   settings         = new EncoderSettings(true, null); 
+    private final EncoderInfo info;
+    private final AtomicInteger predicateCounter;
+    private final AtomicInteger entityCounter;
 
-    private final AtomicInteger     entityCounter    = new AtomicInteger(0);
-    private final AtomicInteger     predicateCounter = new AtomicInteger(0);
+    private EncodingContext<Integer> context;
+
+    public R2Encoder() {
+        Map<String, Object> defaults = new HashMap<>();
+        defaults.put("predicateStartOffset", 0);
+        defaults.put("entityStartOffset", 0);
+
+        this.info = new EncoderInfo(
+                "R2",
+                true,
+                true,
+                Collections.unmodifiableMap(defaults));
+
+        predicateCounter = new AtomicInteger(0);
+        entityCounter = new AtomicInteger(0);
+    }
+
+    @Override
+    public void setContext(EncodingContext<Integer> context) {
+        if (this.context != null && this.context.getStatus() == EncodingStatus.RUNNING) {
+            System.err.println("Current encoding process is still running.");
+            return;
+        }
+
+        if (context == null)
+            throw new IllegalArgumentException("Context cannot be null");
+
+        if (info.isStateful() && context.getStorageEngine() == null)
+            throw new IllegalArgumentException("Encoder is stateful, yet no storage engine was provided");
+
+        this.context = context;
+        Map<String, Object> resolvedParams = resolveParametersFiltered();
+
+        predicateCounter.set((Integer) resolvedParams.getOrDefault("predicateStartOffset", 0));
+        entityCounter.set((Integer) resolvedParams.getOrDefault("entityStartOffset", 0));
+    }
+
+    @Override
+    public EncodingContext<Integer> getContext() {
+        return context;
+    }
+
+    @Override
+    public EncoderInfo getInfo() {
+        return info;
+    }
 
     @Override
     public Integer encode(EncodingData data) {
-        return (data.getType() == TripleComponent.PREDICATE) ?
-                predicateCounter.incrementAndGet() : entityCounter.incrementAndGet();
+        if (context == null) {
+            throw new IllegalStateException("Encoder context not set.");
+        }
+
+        TripleComponent type = data.getType();
+        String prefix = type == TripleComponent.PREDICATE ? "PREDICATE" : "ENTITY";
+        String key = prefix + "::" + data.getValue();
+
+        try {
+            Integer existingCode = context.getStorageEngine().get(key);
+            if (existingCode != null) {
+                return existingCode;
+            }
+
+            Integer newCode = (type == TripleComponent.PREDICATE)
+                    ? predicateCounter.getAndIncrement()
+                    : entityCounter.getAndIncrement();
+
+            context.getStorageEngine().put(key, newCode);
+            return newCode;
+        } catch (StorageException e) {
+            throw new RuntimeException("Failed to access storage engine", e);
+        }
     }
 
     @Override
-    public EncoderSettings getSettings() {
-        return settings;
+    public String getFinalEncoding(EncodingData data) {
+
+        // TODO(gtheo): Create a logger
+        if (context.getStatus() != EncodingStatus.DONE) {
+            System.err.println("The encoding process is not finalized yet");
+            return null;
+        }
+
+        Integer encodedData = encode(data);
+        TripleComponent type = data.getType();
+        int length = (type == TripleComponent.PREDICATE)
+                ? predicateCounter.get()
+                : entityCounter.get();
+
+        String binaryString = Integer.toBinaryString(encodedData);
+        return String.format("%" + length + "s", binaryString).replace(' ', '0');
     }
 
-    @Override
-    public void acceptParams(Map<String, Object> params) {
-        throw new UnsupportedOperationException("Unimplemented method 'acceptParams'");
+    private Map<String, Object> resolveParametersFiltered() {
+        Map<String, Object> resolved = new HashMap<>(info.getDefaultParameters());
+
+        if (context != null && context.getParameters() != null) {
+            for (String key : info.getDefaultParameters().keySet()) {
+                if (context.getParameters().containsKey(key)) {
+                    resolved.put(key, context.getParameters().get(key));
+                }
+            }
+        }
+        return resolved;
     }
 }
