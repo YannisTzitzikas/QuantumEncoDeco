@@ -43,7 +43,7 @@ public class BReader {
      
           
      /**
- 	 * Reads  returns a Arraylist of arrays to Strings
+ 	 * Reads  returns an Arraylist of arrays to Strings
  	 * @param csvFile
  	 * @return
  	 */

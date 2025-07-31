@@ -3,6 +3,6 @@
   	"inputFile": "Resources/ontologies/CIDOC_CRM_v7.1.1.rdfs.xml",
     "mappingFile":"Resources/datafiles/CIDOC_CRM.map",
   	"outputFile":"Resources/datafiles/CIDOC_CRM-Encoded.txt",
-  	"encoding":"R1"
+  	"encoding":"R2"
   }
  ]

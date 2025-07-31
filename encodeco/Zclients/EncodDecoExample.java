@@ -16,14 +16,14 @@ public class EncodDecoExample {
 		System.out.print("EncoDeco v.0.1");
 		
 		String[]   configFiles = {
-				//"Resources/configFiles/CIDOC-CRMencode.json",
+				"Resources/configFiles/CIDOC-CRMencode.json",
 				//"Resources/configFiles/CIDOC-CRMdecode.json",
 				//"Resources/configFiles/DBpediaEncode.json",
 				//"Resources/configFiles/DBpediaDecode.json",
 				//"Resources/configFiles/ChebiEncode.json",
 				//"Resources/configFiles/ChebiDecode.json"
-				"Resources/configFiles/GRSFEncode.json",
-				"Resources/configFiles/GRSFDecode.json"
+				//"Resources/configFiles/GRSFEncode.json",
+				//"Resources/configFiles/GRSFDecode.json"
 		};
 		
 		for (String cf: configFiles) {

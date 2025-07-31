@@ -4,7 +4,7 @@
 
 ## Description
 A Java framework for __encoding__ Knowledge Graphs (represented in RDF) as numeric data for being suitable to use for creating quantum states. It also supports the __decoding__ of results.
-The basic idea of the encoding can be illustrated as:
+The basic idea of the encodings can be illustrated as:
 
 ![QuantumEncoDeco.](exampleR1R2.png)
 
