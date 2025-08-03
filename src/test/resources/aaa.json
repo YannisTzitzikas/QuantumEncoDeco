@@ -1,0 +1,12 @@
+[
+  {
+    "input": "D:/Projects/QuantumEncoDeco/src/test/resources/URIreaderTest.xml",
+    "output": "job1_encoded.txt",
+    "mapping": "job1.map",
+    "encoding": "R1",
+    "engine": "rocksdb",
+    "format": "*.xml",
+    "mode": "encode",
+    "namingStrat": "SUFFIX_MODE"
+  }
+]

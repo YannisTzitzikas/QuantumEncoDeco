@@ -14,46 +14,48 @@ import java.util.HashMap;
 public final class Config {
 
     // Default values as constants
-    private static final String             DEFAULT_OUTPUT_PATH = "output.txt";
-    private static final String             DEFAULT_INPUT_PATH  = "input.txt";
-    private static final String             DEFAULT_MAP_PATH    = "mappings.bin";
+    private static final String             DEFAULT_STORAGE_PATH = "temp";
+    private static final String             DEFAULT_OUTPUT_PATH  = "output.txt";
+    private static final String             DEFAULT_INPUT_PATH   = "input.txt";
+    private static final String             DEFAULT_MAP_PATH     = "mappings.bin";
 
-    private static final String             DEFAULT_FILE_FILTER = "*";
-    private static final String             DEFAULT_ENCODING    = "R1";
-
-    private static final long               DEFAULT_BUFFER_SIZE = 0x2000;
-    private static final boolean            DEFAULT_MODE        = false;    // encode == false ; decode == true
-    private static final boolean            DEFAULT_OVERWRITE   = false;
-    private static final NamingStrategy     DEFAULT_NAME_STRAT  = NamingStrategy.SUFFIX_MODE;
-
+    private static final String             DEFAULT_FILE_FILTER  = "*";
+    private static final String             DEFAULT_ENCODING     = "R1";
+    private static final String             DEFAULT_STORAGE      = "hashmap";
+ 
+    private static final int                DEFAULT_BATCH_SIZE   = 100_000;
+    private static final boolean            DEFAULT_MODE         = false;    // encode == false ; decode == true
+    private static final NamingStrategy     DEFAULT_NAME_STRAT   = NamingStrategy.SUFFIX_MODE;
 
     // Configuration variables
     private final Path                      inputPath;
     private final Path                      outputPath;
+    private final Path                      storagePath;
     private final Path                      mappingsPath;
 
     private final String                    encoding;
     private final String                    fileFilterPattern;
+    private final String                    storageBackend;
 
     private final boolean                   mode;
-    private final boolean                   overwriteExisting;  
 
-    private final long                      bufferSize;
+    private final int                       batchSize;
     private final NamingStrategy            namingStrategy;
-    private final Map<String, String>       parameters; 
+    private final Map<String, Object>       parameters; 
 
     //----- Constructors ----- //
     private Config(Builder builder) {
-        this.inputPath           = builder.inputPath;
+        this.storagePath         = builder.storagePath;
         this.outputPath          = builder.outputPath;
+        this.inputPath           = builder.inputPath;
         this.encoding            = builder.encoding;
         this.parameters          = builder.parameters;
         this.mode                = builder.mode;
         this.mappingsPath        = builder.mappingsPath;
         this.namingStrategy      = builder.namingStrategy;
-        this.overwriteExisting   = builder.overwriteExisting;
-        this.bufferSize          = builder.bufferSize;
+        this.batchSize           = builder.batchSize;
         this.fileFilterPattern   = builder.fileFilterPattern;
+        this.storageBackend      = builder.storageBackend;
     }
 
     public enum NamingStrategy {
@@ -64,19 +66,20 @@ public final class Config {
 
     //----- Builder Pattern ----- //
     public static class Builder {
-        private Path    inputPath                = Paths.get(DEFAULT_INPUT_PATH);
+        private Path    storagePath              = Paths.get(DEFAULT_STORAGE_PATH);
         private Path    outputPath               = Paths.get(DEFAULT_OUTPUT_PATH);
+        private Path    inputPath                = Paths.get(DEFAULT_INPUT_PATH);
         private Path    mappingsPath             = Paths.get(DEFAULT_MAP_PATH);
 
         private String  fileFilterPattern        = DEFAULT_FILE_FILTER;
         private String  encoding                 = DEFAULT_ENCODING;
+        private String  storageBackend           = DEFAULT_STORAGE;
         private boolean mode                     = DEFAULT_MODE;
 
         private NamingStrategy namingStrategy    = DEFAULT_NAME_STRAT;
-        private boolean        overwriteExisting = DEFAULT_OVERWRITE;
-        private long           bufferSize        = DEFAULT_BUFFER_SIZE;
+        private int            batchSize         = DEFAULT_BATCH_SIZE;
         
-        private Map<String, String> parameters = new HashMap<>();
+        private Map<String, Object> parameters   = new HashMap<>();
 
         public Builder withInputPath(String path) {
             if(path != null) this.inputPath = Paths.get(path);
@@ -85,6 +88,16 @@ public final class Config {
     
         public Builder withOutputPath(String path) {
             if(path != null) this.outputPath = Paths.get(path);
+            return this;
+        }
+
+        public Builder withStoragePath(String path) {
+            if(path != null) this.storagePath = Paths.get(path);
+            return this;
+        }
+        
+        public Builder withStorageBackend(String storage) {
+            if(storage != null) this.storageBackend = storage;
             return this;
         }
         
@@ -108,15 +121,9 @@ public final class Config {
             return this;
         }
 
-        public Builder withOverwrite(boolean overwriteExisting)
+        public Builder withBatchSize(Integer batchSize)
         {
-            this.overwriteExisting = overwriteExisting;
-            return this;
-        }
-
-        public Builder withBufferSize(Long bufferSize)
-        {
-            if(bufferSize != null) this.bufferSize = bufferSize;
+            if(batchSize != null) this.batchSize = batchSize;
             return this;
         }
         
@@ -136,7 +143,7 @@ public final class Config {
             return this;
         }
 
-        public Builder withParameters(Map<String, String> parameters) {
+        public Builder withParameters(Map<String, Object> parameters) {
             if (parameters != null) this.parameters = parameters;
             return this;
         }
@@ -155,6 +162,11 @@ public final class Config {
         return outputPath;
     }
 
+    public Path getStoragePath() {
+        return storagePath;
+    }
+
+
     public Path getMappingsPath() {
         return mappingsPath;
     }
@@ -171,24 +183,24 @@ public final class Config {
         return fileFilterPattern;
     }
 
-    public boolean doesOverwriteExisting() {
-        return overwriteExisting;
+    public String getStorageBackend() {
+        return storageBackend;
     }
 
-    public long getBufferSize() {
-        return bufferSize;
+    public int getBatchSize() {
+        return batchSize;
     }
 
     public NamingStrategy getNamingStrategy() {
         return namingStrategy;
     }
  
-    public Map<String, String> getParameters() {
+    public Map<String, Object> getParameters() {
         return parameters;
     }
 
     // Retrieve specific parameter by key
-    public String getParameter(String key) {
+    public Object getParameter(String key) {
         return parameters.getOrDefault(key, "Not specified");
     }
 
@@ -201,8 +213,7 @@ public final class Config {
                .append("\n\tEncoding: ").append(encoding)
                .append("\n\tMode: ").append(mode ? "DECODE" : "ENCODE")
                .append("\n\tFile Filter Pattern: ").append(fileFilterPattern)
-               .append("\n\tOverwrite Existing: ").append(overwriteExisting)
-               .append("\n\tBuffer Size: ").append(bufferSize)
+               .append("\n\tBuffer Size: ").append(batchSize)
                .append("\n\tNaming Strategy: ").append(namingStrategy)
                .append("\n\tParameters: ").append(parameters);
         return builder.toString();

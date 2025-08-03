@@ -74,9 +74,10 @@ public class R1Encoder implements IEncoder<Integer> {
         String key = data.getValue();
 
         try {
-            Integer existingCode = serializer.deserialize(context.getStorageEngine().get(key));
 
-            if (existingCode != null) {
+            byte[] raw = context.getStorageEngine().get(key);
+            if (raw != null) {
+                Integer existingCode = serializer.deserialize(raw);
                 return existingCode;
             }
 
@@ -104,7 +105,6 @@ public class R1Encoder implements IEncoder<Integer> {
 
     @Override
     public String getFinalEncoding(EncodingData data) {
-        // TODO(gtheo): Create a logger
         if (context.getStatus() != EncodingStatus.DONE) {
             System.err.println("The encoding process is not finalized yet");
             return null;

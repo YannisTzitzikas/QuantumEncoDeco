@@ -24,7 +24,6 @@ public class ConfigReaderTest {
         assertEquals("*.txt", first.getFileFilterPattern());
         assertEquals("encode", first.getMode());
         assertEquals(Config.NamingStrategy.SUFFIX_MODE, first.getNamingStrategy());
-        assertTrue(first.doesOverwriteExisting());
-        assertEquals(4096, first.getBufferSize());
+        assertEquals(4096, first.getBatchSize());
     }
 }

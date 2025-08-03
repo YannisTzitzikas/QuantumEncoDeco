@@ -71,25 +71,27 @@ public class JsonConfigParser implements ConfigParser {
     private Config parseConfigObject(JsonObject obj) {
         String inputPath         = obj.has("input")       ? obj.get("input").getAsString()       : null;
         String outputPath        = obj.has("output")      ? obj.get("output").getAsString()      : null;
+        String storagePath       = obj.has("storage")     ? obj.get("storage").getAsString()     : null;
         String mappingsPath      = obj.has("mapping")     ? obj.get("mapping").getAsString()     : null;
         String encoding          = obj.has("encoding")    ? obj.get("encoding").getAsString()    : null;
         String fileFilterPattern = obj.has("format")      ? obj.get("format").getAsString()      : null;
+        String storageBackend    = obj.has("engine")      ? obj.get("engine").getAsString()      : null;
         String mode              = obj.has("mode")        ? obj.get("mode").getAsString()        : null;
         String namingStrategy    = obj.has("namingStrat") ? obj.get("namingStrat").getAsString() : null;
 
-        Long bufferSize          = obj.has("bufferSize")  ? obj.get("bufferSize").getAsLong()    : null;
-        boolean overwriteExisting= obj.has("overwrite")   ? obj.get("overwrite").getAsBoolean()  : false;
+        Integer batchSize        = obj.has("batchSize")  ? obj.get("batchSize").getAsInt()    : null;
 
         return new Config.Builder()
             .withInputPath(inputPath)
             .withOutputPath(outputPath)
+            .withOutputPath(storagePath)
             .withMappingPath(mappingsPath)
+            .withStorageBackend(storageBackend)
             .withEncoding(encoding)
             .withMode(mode)
-            .withBufferSize(bufferSize)
+            .withBatchSize(batchSize)
             .withNamingStrat(namingStrategy)
             .withFileType(fileFilterPattern)
-            .withOverwrite(overwriteExisting)
             .build();
     }
 

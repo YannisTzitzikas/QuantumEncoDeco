@@ -83,8 +83,10 @@ public class R2Encoder implements IEncoder<Integer> {
         String key = prefix + "::" + data.getValue();
 
         try {
-            Integer existingCode = serializer.deserialize(context.getStorageEngine().get(key));
-            if (existingCode != null) {
+            byte[] raw = context.getStorageEngine().get(key);
+
+            if (raw != null) {
+                Integer existingCode = serializer.deserialize(raw);
                 return existingCode;
             }
 
