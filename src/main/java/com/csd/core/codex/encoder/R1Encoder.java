@@ -6,10 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.csd.core.model.EncoderInfo;
-import com.csd.core.model.EncodingContext;
+import com.csd.core.model.JobContext;
 import com.csd.core.model.EncodingData;
 import com.csd.core.storage.StorageException;
-import com.csd.core.model.EncodingContext.EncodingStatus;
+import com.csd.core.model.JobContext.JobStatus;
 
 import com.csd.core.utils.serializer.Serializer;
 import com.csd.core.utils.serializer.IntegerSerializer;
@@ -21,7 +21,7 @@ public class R1Encoder implements IEncoder<Integer> {
 
     private final Serializer<Integer> serializer;
 
-    private EncodingContext context;
+    private JobContext context;
 
     public R1Encoder() {
         Map<String, Object> defaults = new HashMap<>();
@@ -38,8 +38,8 @@ public class R1Encoder implements IEncoder<Integer> {
     }
 
     @Override
-    public void setContext(EncodingContext context) {
-        if (this.context != null && this.context.getStatus() == EncodingStatus.RUNNING) {
+    public void setContext(JobContext context) {
+        if (this.context != null && this.context.getStatus() == JobStatus.RUNNING) {
             System.err.println("Current encoding Process is still running.");
             return;
         }
@@ -57,7 +57,7 @@ public class R1Encoder implements IEncoder<Integer> {
     }
 
     @Override
-    public EncodingContext getContext() {
+    public JobContext getContext() {
         return context;
     }
 
@@ -105,7 +105,7 @@ public class R1Encoder implements IEncoder<Integer> {
 
     @Override
     public String getFinalEncoding(EncodingData data) {
-        if (context.getStatus() != EncodingStatus.DONE) {
+        if (context.getStatus() != JobStatus.DONE) {
             System.err.println("The encoding process is not finalized yet");
             return null;
         }

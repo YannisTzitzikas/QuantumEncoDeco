@@ -6,10 +6,14 @@ import com.csd.core.config.Config;
 import com.csd.core.io.readers.URIReader;
 import com.csd.core.io.readers.URIReaderFactory;
 import com.csd.core.model.*;
+import com.csd.core.model.JobContext.JobType;
+import com.csd.core.stats.StatisticsCollector;
 import com.csd.core.storage.StorageEngine;
 import com.csd.core.storage.StorageEngineFactory;
 import com.csd.core.storage.StorageException;
+import com.csd.core.utils.fs.FileIterator;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,39 +25,56 @@ public class EncodingService {
 
     private final Config config;
     private final StorageEngine storageEngine;
+    private final StatisticsCollector statCollector;
     private final IEncoder<?> encoder;
 
     public EncodingService(Config config) throws Exception {
         this.config = config;
         this.storageEngine = StorageEngineFactory.getStorageEngine(config.getStorageBackend(), config.getStoragePath().toString());
         this.encoder = EncoderFactory.getEncoder(config.getEncoding());
+        this.statCollector = new StatisticsCollector();
         initializeEncoder();
     }
 
     private void initializeEncoder() {
-        EncodingContext context = new EncodingContext(
+        JobContext context = new JobContext(
+            JobType.ENCODING,
             storageEngine,
-            config.getParameters()
+            config.getParameters(),
+            statCollector
         );
+
         encoder.setContext(context);
         logger.info("Initialized {} encoder", encoder.getInfo().getName());
     }
 
     public void execute() throws Exception {
         logger.info("Starting encoding process");
-        EncodingContext context = encoder.getContext();
+        JobContext context = encoder.getContext();
         
+        long startTime = System.nanoTime();
+
+
         try {
             if (encoder.getInfo().isTwoPass()) {
                 logger.info("Starting first pass (two-pass encoding)");
-                context.setStatus(EncodingContext.EncodingStatus.RUNNING);
+                context.setStatus(JobContext.JobStatus.RUNNING);
                 processBatches(true);
-                context.setStatus(EncodingContext.EncodingStatus.DONE);
+                context.setStatus(JobContext.JobStatus.DONE);
                 logger.info("First pass completed");
             }
 
+            long endTime = System.nanoTime();
+            long durationInNs = endTime - startTime;
+            System.out.println("First Pass took " + durationInNs / 1_000_000 + " ms");
+
             logger.info("Starting final encoding pass");
+            startTime = System.nanoTime();
             processBatches(false);
+            endTime = System.nanoTime();
+            durationInNs = endTime - startTime;
+            System.out.println("Second Pass took " + durationInNs / 1_000_000 + " ms");
+
             logger.info("Final encoding pass completed");
 
             exportMappings();
@@ -63,17 +84,22 @@ public class EncodingService {
     }
 
     private void processBatches(boolean isFirstPass) throws Exception {
-        URIReader reader = URIReaderFactory.getReader(config.getInputPath().toString());
+        FileIterator fileIterator = new FileIterator(config.getInputPath(), config.getFileFilterPattern());
         List<URITriple> batch = new ArrayList<>(config.getBatchSize());
-        
-        reader.stream(config.getInputPath().toString(), triple -> {
-            batch.add(triple);
-            if (batch.size() >= config.getBatchSize()) {
-                processBatch(batch, isFirstPass);
-                batch.clear();
-            }
-        });
-        
+    
+        while (fileIterator.hasNext()) {
+            Path file = fileIterator.next();
+            URIReader reader = URIReaderFactory.getReader(file.toString());
+    
+            reader.stream(file.toString(), triple -> {
+                batch.add(triple);
+                if (batch.size() >= config.getBatchSize()) {
+                    processBatch(batch, isFirstPass);
+                    batch.clear();
+                }
+            });
+        }
+    
         if (!batch.isEmpty()) {
             processBatch(batch, isFirstPass);
         }
