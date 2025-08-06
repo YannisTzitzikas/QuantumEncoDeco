@@ -23,7 +23,7 @@ public final class Config {
     private static final String             DEFAULT_ENCODING     = "R1";
     private static final String             DEFAULT_STORAGE      = "hashmap";
  
-    private static final int                DEFAULT_BATCH_SIZE   = 100_000;
+    private static final int                DEFAULT_BATCH_SIZE   = 5_000_000;
     private static final boolean            DEFAULT_MODE         = false;    // encode == false ; decode == true
     private static final NamingStrategy     DEFAULT_NAME_STRAT   = NamingStrategy.SUFFIX_MODE;
 
