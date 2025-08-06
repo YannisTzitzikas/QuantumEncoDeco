@@ -13,7 +13,11 @@ import com.csd.core.storage.StorageEngineFactory;
 import com.csd.core.storage.StorageException;
 import com.csd.core.utils.fs.FileIterator;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +30,7 @@ public class EncodingService {
     private final Config config;
     private final StorageEngine storageEngine;
     private final StatisticsCollector statCollector;
+    private final BufferedWriter outputWriter;
     private final IEncoder<?> encoder;
 
     public EncodingService(Config config) throws Exception {
@@ -33,6 +38,11 @@ public class EncodingService {
         this.storageEngine = StorageEngineFactory.getStorageEngine(config.getStorageBackend(), config.getStoragePath().toString());
         this.encoder = EncoderFactory.getEncoder(config.getEncoding());
         this.statCollector = new StatisticsCollector();
+        this.outputWriter = Files.newBufferedWriter(config.getOutputPath(),  
+                                                    StandardOpenOption.CREATE,
+                                                    StandardOpenOption.TRUNCATE_EXISTING,
+                                                    StandardOpenOption.WRITE);
+
         initializeEncoder();
     }
 
@@ -91,19 +101,33 @@ public class EncodingService {
             Path file = fileIterator.next();
             URIReader reader = URIReaderFactory.getReader(file.toString());
     
+            long startTime = System.nanoTime();
+    
             reader.stream(file.toString(), triple -> {
                 batch.add(triple);
+                statCollector.recordTriple(); // Count each triple
                 if (batch.size() >= config.getBatchSize()) {
                     processBatch(batch, isFirstPass);
+                    statCollector.recordBatch(); // Count each batch
+                    logger.info("Batch no {} finished\n", statCollector.getBatchCount());
                     batch.clear();
                 }
             });
-        }
     
-        if (!batch.isEmpty()) {
-            processBatch(batch, isFirstPass);
+            if (!batch.isEmpty()) {
+                processBatch(batch, isFirstPass);
+                statCollector.recordBatch();
+                batch.clear();
+            }
+    
+            long endTime = System.nanoTime();
+            statCollector.recordFile(file.toString());  // File stats
+            statCollector.addTime(endTime - startTime); // Time per file
+
+            logger.info("File no {}, named {}, finished at {} ms", statCollector.getFileCount(), file.toString(), (endTime - startTime)/1_000_000.0);
         }
     }
+
 
     private void processBatch(List<URITriple> batch, boolean isFirstPass) {
         for (URITriple triple : batch) {
@@ -126,8 +150,14 @@ public class EncodingService {
         String predicateEncoding = encoder.getFinalEncoding(new EncodingData(triple.getPredicate(), TripleComponent.PREDICATE));
         String objectEncoding    = encoder.getFinalEncoding(new EncodingData(triple.getObject(), TripleComponent.OBJECT));
 
-        System.out.println(subjectEncoding + predicateEncoding +objectEncoding );
+        try {
+            outputWriter.write(subjectEncoding + predicateEncoding + objectEncoding);
+            outputWriter.newLine();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write encoded triple to output file", e);
+        }
     }
+
 
     private void exportMappings() throws StorageException {
         String mappingsPath = config.getMappingsPath().toString();

@@ -14,7 +14,7 @@ public class FileIterator implements Iterator<Path> {
             // If it's a single file, add it directly (ignore pattern)
             fileQueue.offer(path);
         } else if (Files.isDirectory(path)) {
-            PathMatcher matcher = (globPattern != null)
+            PathMatcher matcher = (globPattern != null && !globPattern.equals("*"))
                     ? FileSystems.getDefault().getPathMatcher("glob:" + globPattern)
                     : null;
             collectFiles(path, fileQueue, matcher);

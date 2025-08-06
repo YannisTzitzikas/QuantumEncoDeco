@@ -10,7 +10,8 @@ public class RocksDBStorageEngine implements StorageEngine {
     
     public RocksDBStorageEngine(String dbPath) throws RocksDBException {
         RocksDB.loadLibrary();
-        Options options = new Options().setCreateIfMissing(true);
+        Options options = new Options();
+        options.setCreateIfMissing(true);
         this.db = RocksDB.open(options, dbPath);
     }
 

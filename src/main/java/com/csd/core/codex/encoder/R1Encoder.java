@@ -81,6 +81,18 @@ public class R1Encoder implements IEncoder<Integer> {
                 return existingCode;
             }
 
+            if (context.getStatisticsCollector() != null) {
+               switch (data.getType()) {
+                case SUBJECT:
+                case OBJECT:
+                    context.getStatisticsCollector().recordUniqueEntity();
+                    break;
+                case PREDICATE:
+                    context.getStatisticsCollector().recordUniquePredicate();
+                    break;
+                }
+            }
+
             Integer newCode = counter.getAndIncrement();
             context.getStorageEngine().put(key, serializer.serialize(newCode));
 

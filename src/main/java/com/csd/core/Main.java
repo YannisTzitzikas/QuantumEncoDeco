@@ -11,9 +11,9 @@ public class Main {
 
     public static void main(String[] args) {
         
-        ConfigParser parser = ConfigParserFactory.createParser("D:\\Projects\\QuantumEncoDeco\\src\\test\\resources\\aaa.json");
+        ConfigParser parser = ConfigParserFactory.createParser("src\\test\\resources\\aaa.json");
 
-        List<Config> confList = parser.parseConfig("D:\\Projects\\QuantumEncoDeco\\src\\test\\resources\\aaa.json");
+        List<Config> confList = parser.parseConfig("src\\test\\resources\\aaa.json");
 
         for (Config config : confList) {
             try {
