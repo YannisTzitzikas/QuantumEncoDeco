@@ -55,7 +55,7 @@ public class EncodingService {
         );
 
         encoder.setContext(context);
-        logger.info("Initialized {} encoder", encoder.getInfo().getName());
+        logger.info("Initialized {} encoder", encoder.getInfo().getName());        
     }
 
     public void execute() throws Exception {
@@ -109,6 +109,19 @@ public class EncodingService {
                 if (batch.size() >= config.getBatchSize()) {
                     processBatch(batch, isFirstPass);
                     statCollector.recordBatch(); // Count each batch
+
+                    // Log heap usage before clearing
+                    Runtime runtime = Runtime.getRuntime();
+                    long usedBytes = runtime.totalMemory() - runtime.freeMemory();
+                    double usedGB = usedBytes / (1024.0 * 1024 * 1024);
+                    
+                    long maxBytes = runtime.maxMemory();
+                    double maxGB = maxBytes / (1024.0 * 1024 * 1024);
+
+                    logger.info("Heap used: {} GB / Max heap: {} GB", 
+                        String.format("%.2f", usedGB), 
+                        String.format("%.2f", maxGB));
+
                     logger.info("Batch no {} finished\n", statCollector.getBatchCount());
                     batch.clear();
                 }

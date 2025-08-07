@@ -13,7 +13,7 @@
 # FIXME
 🟢 Instead of raw strings for keys, use hashes.
 
-🟠Make the performance better for the KV storage engine that we use, lookups take awfully slow. 
+🟠Make the performance better for the KV storage engine that we use, lookups take awfully long. 
 
 🔴 Jena Streams may encounter a fatal error when reading and shutdown the program.
 
