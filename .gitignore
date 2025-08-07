@@ -31,3 +31,8 @@ replay_pid*
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
 .settings
+
+# misc files and dirs
+logs/
+results/
+temp*/

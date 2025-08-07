@@ -125,6 +125,7 @@ public class EncodingService {
             statCollector.addTime(endTime - startTime); // Time per file
 
             logger.info("File no {}, named {}, finished at {} ms", statCollector.getFileCount(), file.toString(), (endTime - startTime)/1_000_000.0);
+            logger.info(statCollector.toString());
         }
     }
 

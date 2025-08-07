@@ -11,16 +11,14 @@
 - Saturday & Sunday: 5 + Fix bugs
 
 # FIXME
-🟢 Add a better logger backend to not just print the stuff in the console
-
 🟢 Instead of raw strings for keys, use hashes.
 
 🟠Make the performance better for the KV storage engine that we use, lookups take awfully slow. 
 
-🔴 Jena Streams Run out of memory, which they shouldn't do, either when they ve run for a long time (not sure about that) or when the computer goes to sleep mode in the middle of the encoding process and thus the execution stopped. 
+🔴 Jena Streams may encounter a fatal error when reading and shutdown the program.
 
 # NOTES
 First batch of 5 million URIs took around ~5 minutes to complete with my specs, and it took another hour to complete the next 9 batches, meaning it took 1 hour for about 50 million URIs, which I believe is awfully slow!!!
 
 # COMPLETED TASKS
-
+- Add a better logger backend to not just print the stuff in the console
