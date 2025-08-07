@@ -122,7 +122,7 @@ public class EncodingService {
                         String.format("%.2f", usedGB), 
                         String.format("%.2f", maxGB));
 
-                    logger.info("Batch no {} finished\n", statCollector.getBatchCount());
+                    logger.info("Batch no {} finished", statCollector.getBatchCount());
                     batch.clear();
                 }
             });

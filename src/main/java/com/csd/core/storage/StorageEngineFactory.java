@@ -2,7 +2,6 @@ package com.csd.core.storage;
 
 import org.rocksdb.RocksDBException;
 
-// TODO(gtheo): Add some better abstractions for the Storage Configuration
 public class StorageEngineFactory {
 
     private StorageEngineFactory() {

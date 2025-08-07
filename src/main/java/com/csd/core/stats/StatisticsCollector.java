@@ -1,6 +1,5 @@
 package com.csd.core.stats;
 
-// FIXME(gtheo): If program becomes multithreaded, make it thread safe
 public class StatisticsCollector {
 
     // Overall statistics
