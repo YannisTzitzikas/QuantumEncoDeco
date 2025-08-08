@@ -9,7 +9,7 @@ import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.riot.system.StreamRDFBase;
 
-import com.csd.core.model.URITriple;
+import com.csd.core.model.uri.URITriple;
 
 import java.util.function.Consumer;
 

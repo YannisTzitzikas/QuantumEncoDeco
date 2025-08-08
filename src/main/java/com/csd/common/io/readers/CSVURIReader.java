@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import com.csd.core.model.URITriple;
+import com.csd.core.model.uri.URITriple;
 
 public class CSVURIReader implements URIReader {
     public void stream(String filePath, Consumer<URITriple> processor) {
