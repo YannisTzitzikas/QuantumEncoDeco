@@ -3,12 +3,12 @@ package com.csd.common.io.readers;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.system.StreamRDF;
 import org.apache.jena.riot.system.StreamRDFBase;
 
+import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.model.uri.URITriple;
 
 import java.util.function.Consumer;
@@ -32,37 +32,42 @@ public class OntologyURIReader implements URIReader {
 
     private URITriple createTriple(Triple triple) {
         return new URITriple(
-            nodeToString(triple.getSubject()),
-            nodeToString(triple.getPredicate()),
-            nodeToString(triple.getObject())
+            nodeToComponent(triple.getSubject(), TripleComponent.Role.SUBJECT),
+            nodeToComponent(triple.getPredicate(), TripleComponent.Role.PREDICATE ),
+            nodeToComponent(triple.getObject(), TripleComponent.Role.OBJECT)
         );
     }
 
-    private String nodeToString(Node node) {
-        if (node.isURI()) {
-            return node.getURI();
-        } else if (node.isBlank()) {
-            return "_:b" + node.getBlankNodeId().getLabelString();
-        } else if (node.isLiteral()) {
-            return literalToString(node.getLiteral());
-        }
-        throw new IllegalArgumentException("Unsupported node type: " + node);
-    }
+    private TripleComponent nodeToComponent(Node node, TripleComponent.Role role) {
+        TripleComponent.Kind kind;
 
-    private String literalToString(Object literal) {
-        if (literal instanceof Literal) {
-            Literal lit = (Literal) literal;
-            StringBuilder sb = new StringBuilder("\"")
-                .append(lit.getLexicalForm().replace("\"", "\\\""))
-                .append("\"");
-            
-            if (lit.getDatatype() != null) {
-                sb.append("^^").append(lit.getDatatypeURI());
-            } else if (lit.getLanguage() != null && !lit.getLanguage().isEmpty()) {
-                sb.append("@").append(lit.getLanguage());
+        if (node.isURI()) {
+            kind = TripleComponent.Kind.IRI;
+            return new TripleComponent(node.getURI(), kind, role);
+        } else if (node.isBlank()) {
+            kind = TripleComponent.Kind.BLANK_NODE;
+            return new TripleComponent("_:b" + node.getBlankNodeId().getLabelString(), kind, role);
+        } else if (node.isLiteral()) {
+            kind = TripleComponent.Kind.LITERAL;
+            String value = node.getLiteralLexicalForm();
+
+            if (node.getLiteralLanguage() != null && !node.getLiteralLanguage().isEmpty()) {
+                value = "\"" + escape(value) + "\"" + "@" + node.getLiteralLanguage();
+            } else if (node.getLiteralDatatypeURI() != null) {
+                value = "\"" + escape(value) + "\"" + "^^" + node.getLiteralDatatypeURI();
+            } else {
+                value = "\"" + escape(value) + "\"";
             }
-            return sb.toString();
+
+            return new TripleComponent(value, kind, role);
         }
-        return literal.toString();
+
+        kind = TripleComponent.Kind.UNKNOWN;
+        return new TripleComponent(node.toString(), kind, role);
+    }
+    
+    private String escape(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"")
+                .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
     }
 }
