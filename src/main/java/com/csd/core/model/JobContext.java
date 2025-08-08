@@ -2,9 +2,10 @@ package com.csd.core.model;
 
 import java.util.Map;
 
-import com.csd.core.stats.StatisticsCollector;
+import com.csd.common.metrics.StatisticsCollector;
 import com.csd.core.storage.StorageEngine;
 
+@Deprecated
 public class JobContext {
 
     private final JobType jobType;

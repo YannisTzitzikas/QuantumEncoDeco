@@ -1,4 +1,4 @@
-package com.csd.core.io.readers;
+package com.csd.common.io.readers;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;

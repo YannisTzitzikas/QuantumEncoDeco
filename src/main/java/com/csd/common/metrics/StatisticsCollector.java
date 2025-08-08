@@ -1,4 +1,4 @@
-package com.csd.core.stats;
+package com.csd.common.metrics;
 
 public class StatisticsCollector {
 
