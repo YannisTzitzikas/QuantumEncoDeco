@@ -2,6 +2,8 @@ package com.csd.core.storage;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 public class HashMapStorageEngine implements StorageEngine {
     private final Map<String, byte[]> storage = new HashMap<>();
@@ -28,5 +30,23 @@ public class HashMapStorageEngine implements StorageEngine {
 
     @Override
     public void close() {
+    }
+
+    @Override
+    public Stream<String> keys() throws StorageException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'keys'");
+    }
+
+    @Override
+    public Stream<String> keys(String prefix) throws StorageException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'keys'");
+    }
+
+    @Override
+    public Stream<Entry<String, byte[]>> entries() throws StorageException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'entries'");
     }
 }

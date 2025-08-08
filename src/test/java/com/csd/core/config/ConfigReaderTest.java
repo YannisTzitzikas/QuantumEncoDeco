@@ -1,6 +1,12 @@
 package com.csd.core.config;
 
 import org.junit.Test;
+
+import com.csd.config.Config;
+import com.csd.config.ConfigParser;
+import com.csd.config.ConfigParserFactory;
+import com.csd.config.JsonConfigParser;
+
 import java.util.List;
 import static org.junit.Assert.*;
 

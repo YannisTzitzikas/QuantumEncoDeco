@@ -1,4 +1,4 @@
-package com.csd.core.utils.serializer;
+package com.csd.common.utils.serializer;
 
 import java.nio.charset.StandardCharsets;
 

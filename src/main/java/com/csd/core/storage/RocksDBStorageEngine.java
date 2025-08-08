@@ -1,5 +1,8 @@
 package com.csd.core.storage;
 
+import java.util.Map.Entry;
+import java.util.stream.Stream;
+
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
@@ -53,6 +56,24 @@ public class RocksDBStorageEngine implements StorageEngine {
     @Override
     public void close() throws StorageException {
         db.close();
+    }
+
+    @Override
+    public Stream<String> keys() throws StorageException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'keys'");
+    }
+
+    @Override
+    public Stream<String> keys(String prefix) throws StorageException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'keys'");
+    }
+
+    @Override
+    public Stream<Entry<String, byte[]>> entries() throws StorageException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'entries'");
     }
 
 }

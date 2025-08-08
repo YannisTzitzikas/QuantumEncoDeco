@@ -1,4 +1,4 @@
-package com.csd.core.config;
+package com.csd.config;
 
 import java.util.Map;
 import java.nio.file.Path;

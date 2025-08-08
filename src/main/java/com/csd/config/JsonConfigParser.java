@@ -1,4 +1,4 @@
-package com.csd.core.config;
+package com.csd.config;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
