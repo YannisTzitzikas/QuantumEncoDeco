@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  *
  * Designed to be independent of validation and business logic.
  */
-public final class QED_JsonReader implements IReader {
+public final class QEDJsonReader implements IQEDReader {
 
     @Override
     public Map<String, Object> read(File file) throws Exception {

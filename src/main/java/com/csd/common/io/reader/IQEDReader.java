@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public interface IReader {
+public interface IQEDReader {
     Map<String, Object> read(File file)                       throws Exception;
     Map<String, Object> read(Path filePath)                   throws Exception;
     Map<String, Object> read(String fileStr)                  throws Exception;
