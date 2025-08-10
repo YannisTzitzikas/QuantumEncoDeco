@@ -1,10 +1,9 @@
 # TODO
-1. Create a DAG pipeline implementation with pluggable stages 
+1. Finish the parameter config binder (Not urgent)
 1. Recreate R1 and R2 in DAG
 1. Create variations of R1 and R2 using the stages
 1. Enrich configuration system
 1. Get Metrics
-1. Think of a better way to abstract this and build up the stage catalog
 
 # FIXME
 🟠Make the performance better for the KV storage engine that we use, lookups take awfully long. 
@@ -16,3 +15,4 @@ First batch of 5 million URIs took around ~5 minutes to complete with my specs, 
 
 # COMPLETED TASKS
 - Add a better logger backend to not just print the stuff in the console
+- Think of a better way to abstract this and build up the stage catalog
