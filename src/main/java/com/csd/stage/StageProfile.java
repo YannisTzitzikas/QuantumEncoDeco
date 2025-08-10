@@ -2,13 +2,15 @@ package com.csd.stage;
 
 import java.util.*;
 
+import com.csd.common.type.TypeRef;
+
 public final class StageProfile {
     private final String stageId; // global stage id
-    private final Class<?> inputType;
-    private final Class<?> outputType;
+    private final TypeRef inputType;
+    private final TypeRef outputType;
     private final Map<String, ParameterDescriptor> params; // schema
 
-    public StageProfile(String StageId, Class<?> inputType, Class<?> outputType,
+    public StageProfile(String StageId, TypeRef inputType, TypeRef outputType,
                      List<ParameterDescriptor> params) {
         this.stageId = StageId;
         this.inputType = inputType;
@@ -25,11 +27,11 @@ public final class StageProfile {
         return stageId;
     }
 
-    public Class<?> getInputType() {
+    public TypeRef getInputType() {
         return inputType;
     }
 
-    public Class<?> getOutputType() {
+    public TypeRef getOutputType() {
         return outputType;
     }
 

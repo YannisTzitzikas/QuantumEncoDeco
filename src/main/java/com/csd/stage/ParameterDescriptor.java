@@ -2,14 +2,16 @@ package com.csd.stage;
 
 import java.util.function.Predicate;
 
+import com.csd.common.type.TypeRef;
+
 public final class ParameterDescriptor {
     private final String name;
-    private final Class<?> type;
+    private final TypeRef type;
     private final boolean required;
     private final Object defaultValue;
     private final Predicate<Object> validator; // may be null
 
-    private ParameterDescriptor(String name, Class<?> type, boolean required, Object defaultValue, Predicate<Object> validator) {
+    private ParameterDescriptor(String name, TypeRef type, boolean required, Object defaultValue, Predicate<Object> validator) {
         this.name = name;
         this.type = type;
         this.required = required;
@@ -21,7 +23,7 @@ public final class ParameterDescriptor {
         return name;
     }
 
-    public Class<?> getType() {
+    public TypeRef getType() {
         return type;
     }
 
@@ -37,18 +39,18 @@ public final class ParameterDescriptor {
         return validator;
     }
 
-    public static Builder of(String name, Class<?> type) {
+    public static Builder of(String name, TypeRef type) {
         return new Builder(name, type);
     }
 
     public static final class Builder {
         private final String name;
-        private final Class<?> type;
+        private final TypeRef type;
         private boolean required = false;
         private Object defaultValue = null;
         private Predicate<Object> validator = null;
 
-        private Builder(String name, Class<?> type) {
+        private Builder(String name, TypeRef type) {
             this.name = name;
             this.type = type;
         }
