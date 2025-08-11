@@ -1,5 +1,6 @@
 package com.csd.stage;
 
+@SuppressWarnings("unused")
 public final class R1Stage implements Stage {
     private final int startOffset;
     private final StageProfile profile;

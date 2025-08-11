@@ -3,23 +3,23 @@ package com.csd.config;
 import java.util.*;
 
 /**
- * Maps a format-agnostic configuration map into one or more {@link Config}
+ * Maps a format-agnostic configuration map into one or more {@link JobConfig}
  * instances.
  * This class assumes the input map has already been parsed from JSON, YAML,
  * etc.
  *
  * @author George Theodorakis (csd4881@csd.uoc.gr)
  */
-public final class ConfigMapper {
+public final class JobConfigMapper {
 
     /**
-     * Converts a parsed configuration map into a list of {@link Config} objects.
+     * Converts a parsed configuration map into a list of {@link JobConfig} objects.
      * The input may represent a single config object or a list of them.
      *
      * @param raw the parsed configuration map (from IReader)
      * @return list of Config instances
      */
-    public Config map(Map<String, Object> raw) {
+    public JobConfig map(Map<String, Object> raw) {
         if (raw == null) {
             throw new IllegalArgumentException("Config input is null");
         }
@@ -27,7 +27,7 @@ public final class ConfigMapper {
         return mapSingle(raw);
     }
 
-    private Config mapSingle(Map<String, Object> obj) {
+    private JobConfig mapSingle(Map<String, Object> obj) {
         String inputPath         = getString(obj, "input");
         String outputPath        = getString(obj, "output");
         String storagePath       = getString(obj, "storage");
@@ -40,7 +40,7 @@ public final class ConfigMapper {
 
         Integer batchSize        = getInt(obj, "batchSize");
 
-        return new Config.Builder()
+        return new JobConfig.Builder()
             .withInputPath(inputPath)
             .withOutputPath(outputPath)
             .withOutputPath(storagePath)
@@ -54,7 +54,7 @@ public final class ConfigMapper {
             .build();
     }
 
-        private String getString(Map<String, Object> map, String key) {
+    private String getString(Map<String, Object> map, String key) {
         Object v = map.get(key);
         return v instanceof String ? (String) v : null;
     }

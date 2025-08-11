@@ -19,4 +19,9 @@ public final class StageConfig {
     public Map<String, Object> getParams() {
         return params;
     }
+
+    @Override
+    public String toString() {
+        return "StageConfig{stageId='" + stageId + "', params=" + params + "}";
+    }
 }

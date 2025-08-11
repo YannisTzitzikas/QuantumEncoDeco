@@ -1,0 +1,18 @@
+{
+  "name": "Job1",
+  "description": "Branch and join example",
+  "nodes": [
+    { "name": "read",   "id": "Reader", "params": { "path": "input.json" } },
+    { "name": "splitA", "id": "R1",     "params": { "startOffset": 0 } },
+    { "name": "splitB", "id": "Filter", "params": { "minCount": 3 } },
+    { "name": "join",   "id": "Join",   "params": { "strategy": "concat" } },
+    { "name": "sink",   "id": "Writer", "params": { "path": "out.json" } }
+  ],
+  "edges": [
+    { "from": "read",   "to": "splitA" },
+    { "from": "read",   "to": "splitB" },
+    { "from": "splitA", "to": "join"   },
+    { "from": "splitB", "to": "join"   },
+    { "from": "join",   "to": "sink"   }
+  ]
+}
