@@ -8,14 +8,14 @@ public final class ParameterDescriptor {
     private final String name;
     private final TypeRef type;
     private final boolean required;
-    private final Object defaultValue;
+    private final Object value;
     private final Predicate<Object> validator; // may be null
 
-    private ParameterDescriptor(String name, TypeRef type, boolean required, Object defaultValue, Predicate<Object> validator) {
+    private ParameterDescriptor(String name, TypeRef type, boolean required, Object value, Predicate<Object> validator) {
         this.name = name;
         this.type = type;
         this.required = required;
-        this.defaultValue = defaultValue;
+        this.value = value;
         this.validator = validator;
     }
 
@@ -31,8 +31,8 @@ public final class ParameterDescriptor {
         return required;
     }
 
-    public Object getDefaultValue() {
-        return defaultValue;
+    public Object getValue() {
+        return value;
     }
 
     public Predicate<Object> getValidator() {

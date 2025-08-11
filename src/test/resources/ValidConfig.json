@@ -1,0 +1,11 @@
+{
+  "name": "Valid Configuration",
+  "description": "A simple test to see whether Valid Configurations are accepted.",
+  "nodes": [
+    { "name": "read",   "id": "URIBatchReader", "params": { "path": "input.json" } },
+    { "name": "r1", "id": "R1",     "params": { "startOffset": 0 } }
+  ],
+  "edges": [
+    { "from": "read",   "to": "r1" }
+  ]
+}
