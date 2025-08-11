@@ -1,3 +1,4 @@
 com.csd.stage.provider.R1Provider
 com.csd.stage.provider.R2Provider
 com.csd.stage.provider.URIBatchReader
+com.csd.stage.provider.DummyProvider

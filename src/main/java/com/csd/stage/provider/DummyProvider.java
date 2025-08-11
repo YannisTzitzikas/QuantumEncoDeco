@@ -10,15 +10,13 @@ import com.csd.stage.R1Stage;
 import com.csd.stage.Stage;
 import com.csd.stage.StageProfile;
 
-import com.csd.core.model.uri.URITriple;
-
-public class URIBatchReader implements StageProvider {
+public class DummyProvider implements StageProvider {
     
     private final StageProfile defaultProfile;
     
-    public URIBatchReader() {
+    public DummyProvider() {
         TypeRef in  = TypeRef.parameterized(String.class);
-        TypeRef out = TypeRef.parameterized(Iterable.class, TypeRef.Arg.of(TypeRef.simple(URITriple.class)));
+        TypeRef out = TypeRef.parameterized(Iterable.class, TypeRef.Arg.of(TypeRef.simple(String.class)));
 
         List<ParameterDescriptor> params = Arrays.asList(
             ParameterDescriptor.of("batchSize", TypeRef.simple(Integer.class))
@@ -33,7 +31,7 @@ public class URIBatchReader implements StageProvider {
 
     @Override
     public String id() {
-        return "URIBatchReader";
+        return "Dummy";
     }
 
     @Override

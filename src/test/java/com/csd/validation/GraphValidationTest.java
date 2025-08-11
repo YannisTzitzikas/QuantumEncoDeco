@@ -2,9 +2,9 @@ package com.csd.validation;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Map;
 
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.csd.common.io.reader.QEDJsonReader;
@@ -12,47 +12,46 @@ import com.csd.config.GraphConfig;
 import com.csd.config.GraphConfigMapper;
 import com.csd.stage.StageRegistry;
 
-
 public class GraphValidationTest {
 
-    StageRegistry registry;
-    GraphValidator validator;
+    static StageRegistry registry;
+    static GraphValidator validator;
 
-    GraphConfig dagErrorConfig;
-    GraphConfig typeErrorConfig;
-    GraphConfig validConfig;
+    static GraphConfig dagErrorConfig;
+    static GraphConfig typeErrorConfig;
+    static GraphConfig typeErrorConfig2;
+    static GraphConfig validConfig;
 
-    @Before
-    public void setUpGraphConfigs() {
-        // Load file from resources
-        InputStream dagErrorStream = getClass().getClassLoader().getResourceAsStream("DAGError.json");
-        InputStream typeErrorStream = getClass().getClassLoader().getResourceAsStream("InvalidType.json");
-        InputStream validStream = getClass().getClassLoader().getResourceAsStream("ValidConfig.json");
+    @BeforeClass
+        public static void setUpGraphConfigs() {
+        // Correct way to load resources statically
+        ClassLoader cl = GraphValidationTest.class.getClassLoader();
 
-        if (dagErrorStream == null || typeErrorStream == null ||  validStream == null) {
-            throw new IllegalStateException("At least one of the files was not found in resources");
+        InputStream dagErrorStream    = cl.getResourceAsStream("DAGError.json");
+        InputStream typeErrorStream   = cl.getResourceAsStream("InvalidType.json");
+        InputStream typeErrorStream2  = cl.getResourceAsStream("InvalidTypeV2.json");
+        InputStream validStream       = cl.getResourceAsStream("ValidConfig.json");
+
+        if (dagErrorStream == null || typeErrorStream == null ||
+            typeErrorStream2 == null || validStream == null) {
+            throw new IllegalStateException("One or more config files were not found in resources");
         }
 
-        // Parse JSON into Map
         QEDJsonReader reader = new QEDJsonReader();
-        Map<String, Object> raw;
+        GraphConfigMapper mapper = new GraphConfigMapper();
+
         try {
-            raw = reader.read(() -> new InputStreamReader(dagErrorStream));
-            dagErrorConfig = new GraphConfigMapper().map(raw);
-
-            raw = reader.read(() -> new InputStreamReader(typeErrorStream));
-            typeErrorConfig = new GraphConfigMapper().map(raw);
-
-            raw = reader.read(() -> new InputStreamReader(validStream));
-            validConfig = new GraphConfigMapper().map(raw);
-
+            dagErrorConfig    = mapper.map(reader.read(() -> new InputStreamReader(dagErrorStream)));
+            typeErrorConfig   = mapper.map(reader.read(() -> new InputStreamReader(typeErrorStream)));
+            typeErrorConfig2  = mapper.map(reader.read(() -> new InputStreamReader(typeErrorStream2)));
+            validConfig       = mapper.map(reader.read(() -> new InputStreamReader(validStream)));
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Failed to load and map graph configs", e);
         }
     }
 
-    @Before
-    public void setUpRegistryAndValidator() {
+    @BeforeClass
+    public static void setUpRegistryAndValidator() {
         registry = new StageRegistry();
         registry.discoverViaSPI();
 
@@ -70,9 +69,24 @@ public class GraphValidationTest {
     }
 
     @Test
+    public void typeErrorTest2() {
+        System.out.println(validator.validate(typeErrorConfig2));
+    }
+
+    @Test
     public void validConfigTest() {
         System.out.println(validator.validate(validConfig));
     }
 
+    @AfterClass
+    public static void cleanUp() {
+        dagErrorConfig = null;
+        typeErrorConfig = null;
+        typeErrorConfig2 = null;
+        validConfig = null;
+
+        registry = null;
+        validator = null;
+    }
 
 }

@@ -42,7 +42,7 @@ public final class TypeRef {
 
     public static TypeRef parameterized(Class<?> rawType, Arg... args) {
         List<Arg> tempArray = Arrays.asList(args);
-        return new TypeRef(true, tempArray.stream().anyMatch(Arg::isBound), rawType, tempArray);
+        return new TypeRef(false, tempArray.stream().anyMatch(Arg::isBound), rawType, tempArray);
     }
 
     public int       arity()   { return args.size(); }
@@ -89,7 +89,7 @@ public final class TypeRef {
         public static Arg bound() { return new Arg(true, null); }
         public static Arg of(TypeRef concrete) { return new Arg(false, concrete); }
 
-        public boolean isBound() { return bound; }
+        public boolean isBound() { return bound || concrete.isBoundRef || concrete.hasBoundArgument; }
         public Optional<TypeRef> concrete() { return Optional.ofNullable(concrete); }
 
         @Override public String toString() {
