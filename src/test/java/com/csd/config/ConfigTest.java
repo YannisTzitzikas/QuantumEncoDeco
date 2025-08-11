@@ -26,7 +26,7 @@ public class ConfigTest {
         Map<String, Object> raw = reader.read(() -> new InputStreamReader(in));
 
         // Map to GraphConfig
-        GraphConfig config = new GraphConfigMapper().map(raw);
+        GraphConfig config = GraphConfigMapper.map(raw);
 
         // Print full config
         System.out.println("Parsed GraphConfig:");

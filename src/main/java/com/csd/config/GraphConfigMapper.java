@@ -4,7 +4,7 @@ import java.util.*;
 
 public final class GraphConfigMapper {
 
-    public GraphConfig map(Map<String, Object> raw) {
+    public static GraphConfig map(Map<String, Object> raw) {
         String name = getString(raw, "name");
         String description = getString(raw, "description");
 
@@ -26,13 +26,13 @@ public final class GraphConfigMapper {
         return new GraphConfig(name, description, nodes, edges);
     }
 
-    private String getString(Map<String, Object> map, String key) {
+    private static String getString(Map<String, Object> map, String key) {
         Object v = map.get(key);
         return v instanceof String ? (String) v : null;
     }
 
     @SuppressWarnings("unchecked")
-    private List<Map<String, Object>> getList(Map<String, Object> map, String key) {
+    private static List<Map<String, Object>> getList(Map<String, Object> map, String key) {
         Object v = map.get(key);
         return v instanceof List ? (List<Map<String, Object>>) v : Collections.emptyList();
     }

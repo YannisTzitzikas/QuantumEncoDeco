@@ -33,6 +33,31 @@ public final class GraphConfig {
 
     @Override
     public String toString() {
-        return "JobConfig{name='" + name + "', description='" + description + "', nodes=" + nodes + ", edges=" + edges + "}";
+        StringBuilder sb = new StringBuilder();
+        sb.append("GraphConfig {\n");
+        sb.append("  Name: ").append(name).append("\n");
+        sb.append("  Description: ").append(description).append("\n");
+    
+        sb.append("  Nodes:\n");
+        if (nodes != null && !nodes.isEmpty()) {
+            for (NodeConfig node : nodes) {
+                sb.append("    - ").append(node).append("\n");
+            }
+        } else {
+            sb.append("    (none)\n");
+        }
+    
+        sb.append("  Edges:\n");
+        if (edges != null && !edges.isEmpty()) {
+            for (EdgeConfig edge : edges) {
+                sb.append("    - ").append(edge).append("\n");
+            }
+        } else {
+            sb.append("    (none)\n");
+        }
+    
+        sb.append("}");
+        return sb.toString();
     }
+
 }

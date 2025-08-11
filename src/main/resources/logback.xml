@@ -8,7 +8,6 @@
     <file>${LOG_DIR}/jena.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${LOG_DIR}/jena.%d{yyyy-MM-dd}.log</fileNamePattern>
-      <maxHistory>14</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%d %-5level [%thread] %logger - %msg%n</pattern>
@@ -20,7 +19,6 @@
     <file>${LOG_DIR}/error.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${LOG_DIR}/error.%d{yyyy-MM-dd}.log</fileNamePattern>
-      <maxHistory>14</maxHistory>
     </rollingPolicy>
     <filter class="ch.qos.logback.classic.filter.LevelFilter">
       <level>ERROR</level>
@@ -37,7 +35,6 @@
     <file>${LOG_DIR}/warn.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${LOG_DIR}/warn.%d{yyyy-MM-dd}.log</fileNamePattern>
-      <maxHistory>14</maxHistory>
     </rollingPolicy>
     <filter class="ch.qos.logback.classic.filter.LevelFilter">
       <level>WARN</level>
@@ -54,7 +51,6 @@
     <file>${LOG_DIR}/info.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${LOG_DIR}/info.%d{yyyy-MM-dd}.log</fileNamePattern>
-      <maxHistory>14</maxHistory>
     </rollingPolicy>
     <filter class="ch.qos.logback.classic.filter.LevelFilter">
       <level>INFO</level>

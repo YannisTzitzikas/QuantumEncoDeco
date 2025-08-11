@@ -53,27 +53,42 @@ public final class ValidationResult {
         return this;
     }
 
+    public String warnToString() {
+        StringBuilder sb = new StringBuilder("");
+
+        if (!warnings.isEmpty()) {
+            sb.append("Warnings:\n");
+            for (String warning : warnings) {
+                sb.append("\t- ").append(warning).append('\n');
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public String errorsToString() {
+        StringBuilder sb = new StringBuilder("");
+        
+        if (isValid()) sb.append("\tOK\n");
+        else
+        {
+            sb.append("Errors:\n");
+            for (String error : errors) {
+                sb.append("\t- ").append(error).append('\n');
+            }
+        }
+
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("ValidationResult{\n");
 
-        if (isValid()) {
-            sb.append("  OK\n");
-        } else {
-            sb.append("  Errors:\n");
-            for (String error : errors) {
-                sb.append("    - ").append(error).append('\n');
-            }
-        }
-
-        if (!warnings.isEmpty()) {
-            sb.append("  Warnings:\n");
-            for (String warning : warnings) {
-                sb.append("    - ").append(warning).append('\n');
-            }
-        }
-
+        sb.append("\t").append(errorsToString());
+        sb.append("\t").append(warnToString());
         sb.append('}');
+
         return sb.toString();
     }
 

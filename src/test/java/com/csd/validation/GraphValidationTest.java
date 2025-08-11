@@ -38,13 +38,12 @@ public class GraphValidationTest {
         }
 
         QEDJsonReader reader = new QEDJsonReader();
-        GraphConfigMapper mapper = new GraphConfigMapper();
 
         try {
-            dagErrorConfig    = mapper.map(reader.read(() -> new InputStreamReader(dagErrorStream)));
-            typeErrorConfig   = mapper.map(reader.read(() -> new InputStreamReader(typeErrorStream)));
-            typeErrorConfig2  = mapper.map(reader.read(() -> new InputStreamReader(typeErrorStream2)));
-            validConfig       = mapper.map(reader.read(() -> new InputStreamReader(validStream)));
+            dagErrorConfig    = GraphConfigMapper.map(reader.read(() -> new InputStreamReader(dagErrorStream)));
+            typeErrorConfig   = GraphConfigMapper.map(reader.read(() -> new InputStreamReader(typeErrorStream)));
+            typeErrorConfig2  = GraphConfigMapper.map(reader.read(() -> new InputStreamReader(typeErrorStream2)));
+            validConfig       = GraphConfigMapper.map(reader.read(() -> new InputStreamReader(validStream)));
         } catch (Exception e) {
             throw new RuntimeException("Failed to load and map graph configs", e);
         }

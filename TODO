@@ -1,12 +1,15 @@
 # TODO
+
+1. Create Node class
+1. Create DAG Builder
+1. Create the stages needed for R1 and R2 (Encoder and Decoder)
+1. Create the Storage Settings POJO
 1. Finish the parameter config binder (Not urgent)
-1. Recreate R1 and R2 in DAG
-1. Create variations of R1 and R2 using the stages
-1. Enrich configuration system
 1. Get Metrics
+1. Create a GUI. Idea, block-based no code configuration builder.
 
 # FIXME
-🟠Make the performance better for the KV storage engine that we use, lookups take awfully long. 
+🟢Currently all edges just broadcast things which make the system more simple yet more rigid at the same time. Think of some good Edge policies. Think of a way to pass on specific edges only Messages and not broadcast them all the time. This will make the system more complicated due to the fact that we would need to think of a way to pass the emission conditions. A small DSL would be ideal but this is not urgent. 
 
 🔴 Jena Streams may encounter a fatal error when reading and shutdown the program. Find a Recovery mechanism.
 
@@ -16,3 +19,4 @@ First batch of 5 million URIs took around ~5 minutes to complete with my specs, 
 # COMPLETED TASKS
 - Add a better logger backend to not just print the stuff in the console
 - Think of a better way to abstract this and build up the stage catalog
+- Enrich configuration system

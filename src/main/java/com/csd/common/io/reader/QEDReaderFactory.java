@@ -1,7 +1,9 @@
 package com.csd.common.io.reader;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Factory and registry for {@link IQEDReader} implementations.
@@ -73,7 +75,29 @@ public final class QEDReaderFactory {
      *
      * @return set of format names
      */
-    public static java.util.Set<String> getRegisteredFormats() {
-        return new java.util.HashSet<>(registry.keySet());
+    public static Set<String> getRegisteredFormats() {
+        return new HashSet<>(registry.keySet());
     }
+
+    /**
+     * Determines the appropriate reader based on a file path or filename.
+     *
+     * @param filePath the full path or name of the file (e.g., "config.yaml", "data.json")
+     * @return the registered reader that matches the file format
+     * @throws IllegalArgumentException if no reader is available for the inferred format
+     */
+    public static IQEDReader getForFile(String filePath) {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new IllegalArgumentException("File path cannot be null or empty");
+        }
+
+        int dotIndex = filePath.lastIndexOf('.');
+        if (dotIndex == -1 || dotIndex == filePath.length() - 1) {
+            throw new IllegalArgumentException("Unable to determine format from file path: " + filePath);
+        }
+
+        String format = filePath.substring(dotIndex + 1).toLowerCase();
+        return get(format); // delegate to existing method
+    }
+
 }

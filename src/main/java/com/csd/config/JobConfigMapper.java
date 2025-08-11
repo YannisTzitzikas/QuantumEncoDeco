@@ -19,7 +19,7 @@ public final class JobConfigMapper {
      * @param raw the parsed configuration map (from IReader)
      * @return list of Config instances
      */
-    public JobConfig map(Map<String, Object> raw) {
+    public static JobConfig map(Map<String, Object> raw) {
         if (raw == null) {
             throw new IllegalArgumentException("Config input is null");
         }
@@ -27,39 +27,27 @@ public final class JobConfigMapper {
         return mapSingle(raw);
     }
 
-    private JobConfig mapSingle(Map<String, Object> obj) {
-        String inputPath         = getString(obj, "input");
-        String outputPath        = getString(obj, "output");
-        String storagePath       = getString(obj, "storage");
-        String mappingsPath      = getString(obj, "mapping");
-        String encoding          = getString(obj, "encoding");
-        String fileFilterPattern = getString(obj, "format");
-        String storageBackend    = getString(obj, "engine");
-        String mode              = getString(obj, "mode");
-        String namingStrategy    = getString(obj, "namingStrat");
-
-        Integer batchSize        = getInt(obj, "batchSize");
+    private static JobConfig mapSingle(Map<String, Object> obj) {
+        String inputPath   = getString(obj, "input");
+        String outputPath  = getString(obj, "output");
+        String storagePath = getString(obj, "storage");
+        String graphPath   = getString(obj, "graph");
 
         return new JobConfig.Builder()
             .withInputPath(inputPath)
             .withOutputPath(outputPath)
-            .withOutputPath(storagePath)
-            .withMappingPath(mappingsPath)
-            .withStorageBackend(storageBackend)
-            .withEncoding(encoding)
-            .withMode(mode)
-            .withBatchSize(batchSize)
-            .withNamingStrat(namingStrategy)
-            .withFileType(fileFilterPattern)
+            .withStorageSettingsPath(storagePath)
+            .withGraphConfigPath(graphPath)
             .build();
     }
 
-    private String getString(Map<String, Object> map, String key) {
+    private static String getString(Map<String, Object> map, String key) {
         Object v = map.get(key);
         return v instanceof String ? (String) v : null;
     }
 
-    private Integer getInt(Map<String, Object> map, String key) {
+    @SuppressWarnings("unused")
+    private static Integer getInt(Map<String, Object> map, String key) {
         Object v = map.get(key);
         if (v instanceof Number) return ((Number) v).intValue();
         if (v instanceof String) {

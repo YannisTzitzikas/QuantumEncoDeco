@@ -1,0 +1,12 @@
+{
+  "name": "Dummy Graph",
+  "description": "This DAG is a Dummy for testing.",
+  "nodes": [
+    { "name": "read",   "id": "URIBatchReader", "params": { "path": "input.json" } },
+    { "name": "r1", "id": "R1",     "params": { "startOffset": 0 } },
+    { "name": "r2", "id": "R1",     "params": { "startOffset": 0 } }
+  ],
+  "edges": [
+    { "from": "read",   "to": "r1" }
+  ]
+}
