@@ -1,24 +1,26 @@
 package com.csd.config;
 
-public final class NodeConfig {
-    private final String name;           // unique graph name
-    private final StageConfig stageConf; // configuration for the stage
+import java.util.Objects;
 
-    public NodeConfig(String name, StageConfig stageConf) {
-        this.name = name;
-        this.stageConf = stageConf;
+public final class NodeConfig {
+    private final String name;             // unique graph name
+    private final RouteConfig routeConf;   // routing + stage + optional splitter + ports
+
+    public NodeConfig(String name, RouteConfig routeConf) {
+        this.name = Objects.requireNonNull(name, "name");
+        this.routeConf = Objects.requireNonNull(routeConf, "routeConf");
     }
 
     public String getName() {
         return name;
     }
 
-    public StageConfig getStageConf() {
-        return stageConf;
+    public RouteConfig getRouteConf() {
+        return routeConf;
     }
 
     @Override
     public String toString() {
-        return "NodeConfig{name='" + name + "', stageConf=" + stageConf + "}";
+        return "NodeConfig{name='" + name + "', routeConf=" + routeConf + "}";
     }
 }

@@ -7,13 +7,13 @@ import java.util.LinkedHashMap;
 
 import com.csd.common.type.TypeRef;
 
-public final class StageProfile {
+public final class StageDescriptor {
     private final String stageId; // global stage id
     private final TypeRef inputType;
     private final TypeRef outputType;
     private final Map<String, ParameterDescriptor> params; // schema
 
-    public StageProfile(String StageId, TypeRef inputType, TypeRef outputType,
+    public StageDescriptor(String StageId, TypeRef inputType, TypeRef outputType,
                      List<ParameterDescriptor> params) {
         this.stageId = StageId;
         this.inputType = inputType;

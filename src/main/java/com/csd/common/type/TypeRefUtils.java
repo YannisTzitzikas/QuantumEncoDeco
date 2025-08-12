@@ -32,7 +32,7 @@ public final class TypeRefUtils {
             if (srcArg.isBound()) return false; // Can't assign a bound to a concrete
 
             // Recursively check assignability of concrete args
-            if (!isAssignable(srcArg.concrete().get(), tgtArg.concrete().get())) return false;
+            if (!isAssignable(srcArg.getTypeRef(), tgtArg.getTypeRef())) return false;
         }
 
         return true;
@@ -59,7 +59,7 @@ public final class TypeRefUtils {
 
             if (argA.isBound() != argB.isBound()) return false;
             if (!argA.isBound()) {
-                if (!deepEquals(argA.concrete().get(), argB.concrete().get())) return false;
+                if (!deepEquals(argA.getTypeRef(), argB.getTypeRef())) return false;
             }
         }
 

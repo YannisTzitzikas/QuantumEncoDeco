@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * This is vital to our DAG implementation due to the fact that some stages
@@ -76,24 +75,26 @@ public final class TypeRef {
 
     // --- Type argument ---
     public static final class Arg {
-        private final boolean bound; // true means "bind to previous stage output (or part of it)"
-        private final TypeRef concrete; // present only when not bound
+        private final TypeRef type; // present only when not bound
 
-        private Arg(boolean bound, TypeRef concrete) {
-            if (bound && concrete != null)  throw new IllegalArgumentException("Bound arg cannot have concrete type");
-            if (!bound && concrete == null) throw new IllegalArgumentException("Concrete arg must have a type");
-            this.bound = bound;
-            this.concrete = concrete;
+        private Arg(TypeRef type) {
+            if (type == null)  throw new IllegalArgumentException("Type is null");
+            this.type = type;
         }
 
-        public static Arg bound() { return new Arg(true, null); }
-        public static Arg of(TypeRef concrete) { return new Arg(false, concrete); }
+        public static Arg bound()                                       { return new Arg(TypeRef.bound()); }
+        public static Arg of(Class<?> rawType)                          { return new Arg(TypeRef.simple(rawType)); }
+        public static Arg parameterized(Class<?> rawType, Arg... args)  { return new Arg(TypeRef.parameterized(rawType, args));}
 
-        public boolean isBound() { return bound || concrete.isBoundRef || concrete.hasBoundArgument; }
-        public Optional<TypeRef> concrete() { return Optional.ofNullable(concrete); }
+        public static Arg of(TypeRef type)     { return new Arg(type); }
+
+        public boolean isBound() {  return (type.isBoundRef || type.hasBoundArgument); }
+        public boolean isConcrete() { return isBound(); }
+
+        public TypeRef getTypeRef() { return type;}
 
         @Override public String toString() {
-            return bound ? "_BOUND_" : concrete.toString();
+            return type.isBoundRef ? "_BOUND_" : type.toString();
         }
     }
 }

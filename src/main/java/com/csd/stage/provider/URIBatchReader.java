@@ -8,13 +8,13 @@ import com.csd.common.type.TypeRef;
 import com.csd.stage.ParameterDescriptor;
 import com.csd.stage.R1Stage;
 import com.csd.stage.Stage;
-import com.csd.stage.StageProfile;
+import com.csd.stage.StageDescriptor;
 
 import com.csd.core.model.uri.URITriple;
 
 public class URIBatchReader implements StageProvider {
     
-    private final StageProfile defaultProfile;
+    private final StageDescriptor defaultProfile;
     
     public URIBatchReader() {
         TypeRef in  = TypeRef.parameterized(String.class);
@@ -27,7 +27,7 @@ public class URIBatchReader implements StageProvider {
                                .build()
         );
 
-        defaultProfile = new StageProfile(id(), in, out, params);
+        defaultProfile = new StageDescriptor(id(), in, out, params);
     }
 
 
@@ -37,7 +37,7 @@ public class URIBatchReader implements StageProvider {
     }
 
     @Override
-    public StageProfile defaultProfile() {
+    public StageDescriptor defaultProfile() {
         return defaultProfile;
     }
 

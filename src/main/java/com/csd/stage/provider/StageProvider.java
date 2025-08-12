@@ -4,10 +4,10 @@ import java.util.Map;
 
 import com.csd.stage.ParameterDescriptor;
 import com.csd.stage.Stage;
-import com.csd.stage.StageProfile;
+import com.csd.stage.StageDescriptor;
 
 public interface StageProvider {
-    StageProfile defaultProfile();
+    StageDescriptor defaultProfile();
     Stage create(Map<String, ParameterDescriptor> params) throws Exception;
     
     // I am not sure about that.

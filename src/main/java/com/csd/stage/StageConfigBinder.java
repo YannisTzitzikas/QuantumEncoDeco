@@ -8,7 +8,7 @@ import com.csd.config.StageConfig;
 public final class StageConfigBinder {
 
     // TODO(gtheo): Implement this, not Urgent
-    public static Map<String, ParameterDescriptor> bind(StageConfig cfg, StageProfile profile) {
+    public static Map<String, ParameterDescriptor> bind(StageConfig cfg, StageDescriptor profile) {
         Map<String, ParameterDescriptor> out = profile.getParams();
         return out;
     }

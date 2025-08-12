@@ -6,9 +6,6 @@ import com.csd.config.GraphConfig;
 import com.csd.config.GraphConfigMapper;
 import com.csd.config.JobConfig;
 import com.csd.config.JobConfigMapper;
-import com.csd.stage.StageRegistry;
-import com.csd.validation.GraphValidator;
-import com.csd.validation.ValidationResult;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,14 +48,8 @@ public final class Main {
             reader                = QEDReaderFactory.getForFile(graphConfigPath.toString());
             intermediate          = reader.read(graphConfigPath);
 
-            GraphConfig   graphConf = GraphConfigMapper.map(intermediate); 
-            StageRegistry registry  = new StageRegistry();
-            registry.discoverViaSPI();
-
-            GraphValidator validator = new GraphValidator(registry);
-            ValidationResult result  = validator.validate(graphConf);
-
-            log.info("{}",result);
+            GraphConfigMapper gmap = new GraphConfigMapper();
+            GraphConfig   graphConf = gmap.map(intermediate); 
             log.info("Loaded GraphConfig: {}", graphConf);
 
         } catch (IllegalArgumentException e) {

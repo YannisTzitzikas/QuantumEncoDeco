@@ -8,11 +8,11 @@ import com.csd.common.type.TypeRef;
 import com.csd.stage.ParameterDescriptor;
 import com.csd.stage.R1Stage;
 import com.csd.stage.Stage;
-import com.csd.stage.StageProfile;
+import com.csd.stage.StageDescriptor;
 
 public class DummyProvider implements StageProvider {
     
-    private final StageProfile defaultProfile;
+    private final StageDescriptor defaultProfile;
     
     public DummyProvider() {
         TypeRef in  = TypeRef.parameterized(String.class);
@@ -25,7 +25,7 @@ public class DummyProvider implements StageProvider {
                                .build()
         );
 
-        defaultProfile = new StageProfile(id(), in, out, params);
+        defaultProfile = new StageDescriptor(id(), in, out, params);
     }
 
 
@@ -35,7 +35,7 @@ public class DummyProvider implements StageProvider {
     }
 
     @Override
-    public StageProfile defaultProfile() {
+    public StageDescriptor defaultProfile() {
         return defaultProfile;
     }
 

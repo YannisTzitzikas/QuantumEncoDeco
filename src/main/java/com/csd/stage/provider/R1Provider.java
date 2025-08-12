@@ -8,11 +8,11 @@ import com.csd.common.type.TypeRef;
 import com.csd.stage.ParameterDescriptor;
 import com.csd.stage.R1Stage;
 import com.csd.stage.Stage;
-import com.csd.stage.StageProfile;
+import com.csd.stage.StageDescriptor;
 
 public final class R1Provider implements StageProvider {
 
-    private final StageProfile defaultProfile;
+    private final StageDescriptor defaultProfile;
 
     public R1Provider() {
         TypeRef in  = TypeRef.parameterized(Iterable.class, TypeRef.Arg.bound());
@@ -25,14 +25,14 @@ public final class R1Provider implements StageProvider {
                                .build()
         );
 
-        defaultProfile = new StageProfile(id(), in, out, params);
+        defaultProfile = new StageDescriptor(id(), in, out, params);
     }
 
     @Override
     public String id() { return "R1"; }
 
     @Override
-    public StageProfile defaultProfile() {
+    public StageDescriptor defaultProfile() {
         return defaultProfile;
     }
 

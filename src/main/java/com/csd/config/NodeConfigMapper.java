@@ -2,25 +2,25 @@ package com.csd.config;
 
 import java.util.Map;
 
-final class NodeConfigMapper {
+import com.csd.common.utils.mapper.BaseMapper;
 
-    public NodeConfig map(Map<String, Object> raw) {
-        String name = getString(raw, "name");
-        String stageId = getString(raw, "id");
-        Map<String, Object> params = getMap(raw, "params");
+final class NodeConfigMapper extends BaseMapper {
 
-        StageConfig stageConf = new StageConfig(stageId, params);
-        return new NodeConfig(name, stageConf);
-    }
+    public NodeConfig map(Map<String, Object> rawNodeMap) {
 
-    private String getString(Map<String, Object> map, String key) {
-        Object v = map.get(key);
-        return v instanceof String ? (String) v : null;
-    }
+        RouteConfigMapper routeMapper = new RouteConfigMapper();
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> getMap(Map<String, Object> map, String key) {
-        Object v = map.get(key);
-        return v instanceof Map ? (Map<String, Object>) v : null;
+        if (rawNodeMap == null || rawNodeMap.isEmpty()) {
+            throw new IllegalArgumentException("NodeConfig must include a valid Map.");
+        }
+
+        // Extract stageConf and splitterConf from routeConf map
+        Map<String, Object> stageConfMap = getMap(rawNodeMap, "stage");
+        Map<String, Object> splitterConfMap = getMap(rawNodeMap, "splitter");
+
+        String      name      = getString(rawNodeMap,"name");
+        RouteConfig routeConf = routeMapper.map(stageConfMap, splitterConfMap);
+
+        return new NodeConfig(name, routeConf);
     }
 }

@@ -2,11 +2,47 @@
   "name": "Dummy Graph",
   "description": "This DAG is a Dummy for testing.",
   "nodes": [
-    { "name": "read",   "id": "URIBatchReader", "params": { "path": "input.json" } },
-    { "name": "r1", "id": "R1",     "params": { "startOffset": 0 } },
-    { "name": "r2", "id": "R1",     "params": { "startOffset": 0 } }
+    {
+      "name": "read",
+      "stage": {
+        "id": "URIBatchReader",
+        "params": { "path": "input.json" }
+      },
+      "splitter": {
+        "type": "ListAwareSplitter",
+        "params": {},
+        "delegate": {
+          "type": "BeanFieldsSplitStrategy",
+          "params": {},
+          "portMappings": {
+            "subjects": "subject",
+            "predicates": "predicate",
+            "objects": "object"
+          }
+        },
+        "portMappings": {
+          "subjects": "subjects",
+          "predicates": "predicates",
+          "objects": "objects"
+        }
+      }
+    },
+    {
+      "name": "r1",
+      "stage": {
+        "id": "R1",
+        "params": { "startOffset": 0 }
+      }
+    },
+    {
+      "name": "r2",
+      "stage": {
+        "id": "R1",
+        "params": { "startOffset": 0 }
+      }
+    }
   ],
   "edges": [
-    { "from": "read",   "to": "r1" }
+    { "from": "read.predicates", "to": "r1" }
   ]
 }
