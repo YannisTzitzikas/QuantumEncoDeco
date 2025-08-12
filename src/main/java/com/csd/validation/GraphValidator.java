@@ -3,7 +3,7 @@ package com.csd.validation;
 import com.csd.config.EdgeConfig;
 import com.csd.config.GraphConfig;
 import com.csd.config.NodeConfig;
-import com.csd.stage.StageRegistry;
+import com.csd.core.stage.StageRegistry;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

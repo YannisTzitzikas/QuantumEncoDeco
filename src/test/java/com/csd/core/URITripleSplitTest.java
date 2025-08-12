@@ -2,8 +2,9 @@ package com.csd.core;
 
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.model.uri.URITriple;
-import com.csd.core.split.BeanFieldsSplitStrategy;
 import com.csd.core.split.SplitStrategy;
+import com.csd.split.BeanFieldsSplitStrategy;
+
 import org.junit.Test;
 
 import java.util.LinkedHashMap;

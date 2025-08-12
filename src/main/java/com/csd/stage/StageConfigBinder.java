@@ -3,7 +3,9 @@ package com.csd.stage;
 import java.util.Map;
 import javax.xml.bind.ValidationException;
 
+import com.csd.common.params.ParameterDescriptor;
 import com.csd.config.StageConfig;
+import com.csd.core.stage.StageDescriptor;
 
 public final class StageConfigBinder {
 

@@ -1,10 +1,11 @@
-package com.csd.stage;
+package com.csd.core.stage;
 
 import java.util.Map;
 import java.util.List;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 
+import com.csd.common.params.ParameterDescriptor;
 import com.csd.common.type.TypeRef;
 
 public final class StageDescriptor {

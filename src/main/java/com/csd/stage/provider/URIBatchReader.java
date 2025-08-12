@@ -4,13 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.csd.common.params.ParameterDescriptor;
 import com.csd.common.type.TypeRef;
-import com.csd.stage.ParameterDescriptor;
 import com.csd.stage.R1Stage;
-import com.csd.stage.Stage;
-import com.csd.stage.StageDescriptor;
-
 import com.csd.core.model.uri.URITriple;
+import com.csd.core.stage.Stage;
+import com.csd.core.stage.StageDescriptor;
 
 public class URIBatchReader implements StageProvider {
     

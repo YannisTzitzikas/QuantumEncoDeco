@@ -4,6 +4,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import com.csd.core.stage.StageRegistry;
+
 public class StageRegistryTest {
 
     @Test

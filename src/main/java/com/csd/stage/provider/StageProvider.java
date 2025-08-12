@@ -2,9 +2,9 @@ package com.csd.stage.provider;
 
 import java.util.Map;
 
-import com.csd.stage.ParameterDescriptor;
-import com.csd.stage.Stage;
-import com.csd.stage.StageDescriptor;
+import com.csd.common.params.ParameterDescriptor;
+import com.csd.core.stage.Stage;
+import com.csd.core.stage.StageDescriptor;
 
 public interface StageProvider {
     StageDescriptor defaultProfile();

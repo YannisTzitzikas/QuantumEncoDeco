@@ -1,10 +1,12 @@
-package com.csd.core.split;
+package com.csd.split;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.csd.core.split.SplitStrategy;
 
 public class BeanFieldsSplitStrategy implements SplitStrategy {
 

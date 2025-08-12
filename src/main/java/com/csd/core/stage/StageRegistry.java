@@ -1,4 +1,4 @@
-package com.csd.stage;
+package com.csd.core.stage;
 
 import java.util.HashMap;
 import java.util.Map;
