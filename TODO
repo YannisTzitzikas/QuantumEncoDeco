@@ -3,7 +3,7 @@
 1. Create Node class
 1. Create DAG Builder
 1. Create the stages needed for R1 and R2 (Encoder and Decoder)
-1. Create the Storage Settings POJO
+1. Create the Storage Settings Adapter
 1. Finish the parameter config binder (Not urgent)
 1. Get Metrics
 1. Create a GUI. Idea, block-based no code configuration builder.
