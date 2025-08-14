@@ -5,27 +5,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
 
-import com.csd.stage.provider.StageProvider;
-
 public final class StageRegistry {
-    private final Map<String, StageProvider> providers = new HashMap<>();
+    private final Map<String, StageDescriptor> descriptors = new HashMap<>();
 
-    public void register(StageProvider p) {
-        StageProvider prev = providers.putIfAbsent(p.id(), p);
-        if (prev != null) throw new IllegalArgumentException("Duplicate stage id: " + p.id());
+    public void register(StageDescriptor p) {
+        descriptors.putIfAbsent(p.getStageId(), p);
     }
 
-    public Optional<StageProvider> get(String id) {
-        return Optional.ofNullable(providers.get(id));
+    public Optional<StageDescriptor> getDescriptor(String id) {
+        return Optional.ofNullable(descriptors.get(id));
     }
 
-    public static StageRegistry withBuiltins(StageProvider... builtins) {
+    public static StageRegistry withBuiltins(StageDescriptor... builtins) {
         StageRegistry c = new StageRegistry();
-        for (StageProvider p : builtins) c.register(p);
+        for (StageDescriptor p : builtins) c.register(p);
         return c;
     }
 
     public void discoverViaSPI() {
-        ServiceLoader.load(StageProvider.class).forEach(this::register);
+        ServiceLoader.load(StageDescriptor.class).forEach(this::register);
     }
 }

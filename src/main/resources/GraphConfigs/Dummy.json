@@ -9,35 +9,25 @@
         "params": { "path": "input.json" }
       },
       "splitter": {
-        "type": "ListAwareSplitter",
+        "type": "BeanFieldsSplitStrategy",
         "params": {},
-        "delegate": {
-          "type": "BeanFieldsSplitStrategy",
-          "params": {},
-          "portMappings": {
-            "subjects": "subject",
-            "predicates": "predicate",
-            "objects": "object"
-          }
-        },
         "portMappings": {
-          "subjects": "subjects",
           "predicates": "predicates",
-          "objects": "objects"
+          "entities": "subjects"
         }
       }
     },
     {
       "name": "r1",
       "stage": {
-        "id": "R1",
+        "id": "BasisEncoder",
         "params": { "startOffset": 0 }
       }
     },
     {
       "name": "r2",
       "stage": {
-        "id": "R1",
+        "id": "BasisEncoder",
         "params": { "startOffset": 0 }
       }
     }

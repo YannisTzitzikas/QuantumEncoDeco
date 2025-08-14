@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import com.csd.common.params.ParameterDescriptor;
 import com.csd.common.type.TypeRef;
 
-public final class StageDescriptor {
+public class StageDescriptor {
     private final String stageId; // global stage id
     private final TypeRef inputType;
     private final TypeRef outputType;

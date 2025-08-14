@@ -18,7 +18,8 @@ import com.csd.common.type.TypeRef;
  *
  * The class is immutable and preserves insertion order for maps.
  */
-public class SplitterDescriptor {
+public abstract class SplitterDescriptor {
+    private final String  id;
     private final TypeRef inputType;
     private final TypeRef outputType; // TypeRef of output type of branches. Usually is a bound arg
     private final boolean delegateRequired;
@@ -28,11 +29,13 @@ public class SplitterDescriptor {
      * Creates a splitter with multiple outputs (e.g., branch-labeled).
      */
     public SplitterDescriptor(
+            String  id,
             TypeRef inputType,
             TypeRef outputType,
             boolean delegateRequired,
             List<ParameterDescriptor> params
     ) {
+        this.id         = Objects.requireNonNull(id, "id");
         this.inputType  = Objects.requireNonNull(inputType, "inputType");
         this.outputType = Objects.requireNonNull(outputType, "outputType");
         this.delegateRequired = delegateRequired;
@@ -46,11 +49,15 @@ public class SplitterDescriptor {
         this.params = Collections.unmodifiableMap(pmap);
     }
 
+    public String getId() {
+        return id;
+    }
+
     public TypeRef getInputType() {
         return inputType;
     }
 
-    public TypeRef getOutputTypes() {
+    public TypeRef getOutputType() {
         return outputType;
     }
 
@@ -67,4 +74,7 @@ public class SplitterDescriptor {
     public Map<String, ParameterDescriptor> getParams() {
         return params;
     }
+
+    // TODO(gtheo): Decouple it 
+    abstract public TypeRef projectTypeOutput(TypeRef passedInput, String param);
 }

@@ -1,9 +1,15 @@
 package com.csd.validation;
 
+import com.csd.common.type.TypeRef;
+import com.csd.common.type.TypeRefUtils;
 import com.csd.config.EdgeConfig;
 import com.csd.config.GraphConfig;
 import com.csd.config.NodeConfig;
+import com.csd.config.RouteConfig;
+import com.csd.core.stage.StageDescriptor;
 import com.csd.core.stage.StageRegistry;
+import com.csd.core.split.SplitterDescriptor;
+import com.csd.core.split.SplitterRegistry;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -13,7 +19,6 @@ import java.util.List;
 import java.util.Deque;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,10 +28,12 @@ import java.util.stream.Collectors;
 @Deprecated
 public final class GraphValidator {
 
-    private final StageRegistry registry;
+    private final StageRegistry     stageRegistry;
+    private final SplitterRegistry  splitterRegistry;
 
-    public GraphValidator(StageRegistry registry) {
-        this.registry = Objects.requireNonNull(registry, "StageRegistry");
+    public GraphValidator(StageRegistry stageRegistry, SplitterRegistry splitterRegistry) {
+        this.stageRegistry    = Objects.requireNonNull(stageRegistry, "StageRegistry");
+        this.splitterRegistry = Objects.requireNonNull(splitterRegistry, "StageRegistry");
     }
 
     public ValidationResult validate(GraphConfig graph) {
@@ -36,36 +43,23 @@ public final class GraphValidator {
             return result;
         }
 
-        Set<String> nodeNames = extractNodeNames(graph);
+        Map<String, NodeConfig> nodeMap   = extractNodeMap(graph);
+        Set<String>             nodeNames = extractNodeNames(graph);
 
-        result.merge(checkNamesUnique(graph, nodeNames));
-        result.merge(checkEdgesReferenceExistingNodes(graph, nodeNames));
-        result.merge(checkUnusedNodes(graph, nodeNames));
+        // Structural Checks
+        result.merge(validateUniqueNames(graph, nodeNames));
+        result.merge(validateEdgesReferenceExistingNodes(graph, nodeNames, nodeMap));
+        result.merge(validatekUnusedNodes(graph, nodeNames));
+        List<String> topology = validateTopology(graph, nodeNames, result);
 
-        Optional<List<String>> topoOpt = topoSort(graph, nodeNames, result);
-        if (!topoOpt.isPresent()) {
-            return result;
-        }
+        // If invalid, skip the type cohesion check
+        if(result.isValid()) 
+            result.merge(validateTypeCohesion(graph, nodeNames, topology, nodeMap));
 
-        // Map<String, StageProvider> providers = resolveStageProviders(graph, result);
-        // if (providers.isEmpty()) {
-        //     return result;
-        // }
-        // result.merge(checkTypeCohesion(graph));
         return result;
     }
 
-    // ---------- Structural ----------
-
-    private Set<String> extractNodeNames(GraphConfig graph) {
-        // LinkedHashSet preserves declaration order (nice for messages)
-        return graph.getNodes().stream()
-                .map(NodeConfig::getName)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-    }
-
-    private ValidationResult checkNamesUnique(GraphConfig graph, Set<String> nodeNames) {
+    private ValidationResult validateUniqueNames(GraphConfig graph, Set<String> nodeNames) {
         ValidationResult result = new ValidationResult();
 
         Map<String, Long> counts = graph.getNodes().stream()
@@ -86,7 +80,7 @@ public final class GraphValidator {
         return result;
     }
 
-    private ValidationResult checkUnusedNodes(GraphConfig graph, Set<String> nodeNames) {
+    private ValidationResult validatekUnusedNodes(GraphConfig graph, Set<String> nodeNames) {
         ValidationResult result = new ValidationResult();
 
         // Collect all node names that are referenced by edges.
@@ -117,30 +111,37 @@ public final class GraphValidator {
         return result;
     }
 
-    private ValidationResult checkEdgesReferenceExistingNodes(GraphConfig graph, Set<String> nodeNames) {
+    private ValidationResult validateEdgesReferenceExistingNodes(GraphConfig graph, Set<String> nodeNames, Map<String, NodeConfig> nodeMap) {
         ValidationResult result = new ValidationResult();
 
         // Remove edges that reference missing nodes; issue warnings.
         for (Iterator<EdgeConfig> it = graph.getEdges().iterator(); it.hasNext();) {
-            EdgeConfig e = it.next();
-            String from = e.getFrom();
-            String to = e.getTo();
+            EdgeConfig e    = it.next();
+            String from     = e.getFrom();
+            String fromPort = e.getFromPort();
+            String to       = e.getTo();
 
             boolean missingFrom = (from == null || !nodeNames.contains(from));
-            boolean missingTo = (to == null || !nodeNames.contains(to));
+            boolean missingTo   = (to == null || !nodeNames.contains(to));
+            boolean missingFromPort = false;
+
+            if (!missingFrom && fromPort != null) {
+                NodeConfig fromNode = nodeMap.get(from);
+                Map<String, String> ports = fromNode.getRouteConf().getEffectivePorts();
+                missingFromPort = !ports.containsKey(fromPort);
+            }
 
             if (missingFrom || missingTo) {
                 it.remove();
-
                 StringBuilder reason = new StringBuilder();
-                if (missingFrom)
-                    reason.append("missing 'from' node: ").append(from);
-                if (missingFrom && missingTo)
-                    reason.append("; ");
-                if (missingTo)
-                    reason.append("missing 'to' node: ").append(to);
 
-                String repr = "(" + from + " -> " + to + ")";
+                if (missingFrom)                        reason.append("missing 'from' node: ").append(from);
+                if (missingFrom && 
+                    (missingTo || missingFromPort))     reason.append("; ");
+                if (missingTo)                          reason.append("missing 'to' node: ").append(to);
+                if (missingFromPort)                    reason.append("missing 'from' port: ").append(fromPort);
+    
+                String repr = "(" + from + "." + fromPort + " -> " + to + ")";
                 result.addWarning("Removed edge " + repr + " — " + reason);
             }
         }
@@ -148,27 +149,39 @@ public final class GraphValidator {
         return result;
     }
 
-    // ---------- DAG / Toposort ----------
-    private Optional<List<String>> topoSort(GraphConfig graph, Set<String> nodeNames, ValidationResult result) {
+    /**
+    * It is used to check whether the Graph is Acyclic or not.
+    * 
+    * This is called after {@link checkUnusedNodes} and {@link checkEdgesReferenceExistingNodes} in validate
+    * so we can assume that there are no more unused edges and invalid ports. Thus we can just check whether
+    * the nodes themselved do not form a cyrcle.
+    * 
+    * @param graph     The Graph Configuration
+    * @param nodeNames The Set of all the Node Names
+    * @return The topology of the graph if valid or null
+    */
+    private List<String> validateTopology(GraphConfig graph, Set<String> nodeNames, ValidationResult result) {
         Map<String, List<String>> adj = initAdjacency(nodeNames);
         Map<String, Integer> indegree = initIndegree(nodeNames);
-
+    
         // Only include edges with valid endpoints
         for (EdgeConfig e : graph.getEdges()) {
-            String u = e.getFrom();
-            String v = e.getTo();
-            if (nodeNames.contains(u) && nodeNames.contains(v)) {
-                adj.get(u).add(v);
-                indegree.put(v, indegree.get(v) + 1);
+            String fromNode = e.getFrom();
+            String toNode   = e.getTo();
+    
+            if (nodeNames.contains(fromNode) && nodeNames.contains(toNode)) {
+                // DAG is node-based, so we ignore port in adjacency but validate it elsewhere
+                adj.get(fromNode).add(toNode);
+                indegree.put(toNode, indegree.get(toNode) + 1);
             }
         }
-
+    
         Deque<String> q = new ArrayDeque<>();
         for (String n : nodeNames) {
             if (indegree.get(n) == 0)
                 q.addLast(n);
         }
-
+    
         List<String> topo = new ArrayList<>(nodeNames.size());
         while (!q.isEmpty()) {
             String u = q.removeFirst();
@@ -180,7 +193,7 @@ public final class GraphValidator {
                     q.addLast(w);
             }
         }
-
+    
         if (topo.size() != nodeNames.size()) {
             List<String> cyclic = indegree.entrySet().stream()
                     .filter(en -> en.getValue() > 0)
@@ -188,12 +201,77 @@ public final class GraphValidator {
                     .sorted()
                     .collect(Collectors.toList());
             result.addError("Graph contains cycle(s) involving nodes: " + cyclic);
-            return Optional.empty();
+            return null;
         }
-
-        return Optional.of(topo);
+    
+        return topo;
     }
 
+    private ValidationResult validateTypeCohesion(GraphConfig graph,
+                                                  Set<String> nodeNames,
+                                                  List<String> topology,
+                                                  Map<String, NodeConfig> nodeMap)
+    {
+        // Holds resolved types for outputs: (nodeName, portName) -> concrete TypeRef
+        Map<String, Map<String, TypeRef>> resolvedOutputs = new HashMap<>();
+        ValidationResult                  result         = new ValidationResult();
+
+        for (String nodeName : topology) {
+
+            NodeConfig  node  = nodeMap.get(nodeName);
+            RouteConfig route = node.getRouteConf();
+
+            String      stageId     = route.getStageConf().getStageId();
+            String      splitterId  = (route.getSplitterConf() == null) ? null : route.getSplitterConf().getType();  
+
+            StageDescriptor    stageDesc    = stageRegistry.getDescriptor(stageId).get();
+            SplitterDescriptor splitterDesc = splitterRegistry.getDescriptor(splitterId).get();
+        
+            List<TypeRef> inboundTypes = collectInboundTypes(graph, nodeName, resolvedOutputs);
+        
+            TypeRef expectedInput = stageDesc.getInputType();
+            TypeRef commonInput   = TypeRefUtils.GCTypeInList(inboundTypes);
+
+            if (commonInput == null)
+            {
+                result.addError("Type mismatch between input nodes feeding '" + nodeName);
+                return result;
+            } 
+            
+            TypeRef resolvedInput = TypeRefUtils.GCTypeInList(inboundTypes);
+
+            if (resolvedInput == null){
+                result.addError("Inbound unified type " + commonInput + " is not compatible with expected bound input " +
+                                expectedInput + " for node '" + nodeName + "'");
+                return result;
+            } 
+        
+            if (splitterDesc == null) {
+                TypeRef outType = TypeRefUtils.GCType(stageDesc.getOutputType(), resolvedInput);
+                resolvedOutputs.computeIfAbsent(nodeName, k -> new HashMap<>())
+                            .put(RouteConfig.DEFAULT_OUT_PORT, outType);
+            } else {
+                TypeRef stageOutConcrete = TypeRefUtils.GCType(stageDesc.getOutputType(), resolvedInput);
+                if (!TypeRefUtils.isAssignable(stageOutConcrete, splitterDesc.getInputType())) {
+                    result.addError("Splitter input type mismatch on node " + nodeName);
+                    return result;
+                }
+                Map<String, String> ports = node.getRouteConf().getSplitterConf().getPortMappings();
+                for (String portName : ports.keySet()) {
+                    TypeRef portOut = TypeRefUtils.GCType(splitterDesc.getOutputType(), stageOutConcrete);
+                    resolvedOutputs.computeIfAbsent(nodeName, k -> new HashMap<>())
+                                .put(portName, portOut);
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+
+
+    //-------- UTILITIES -------------
     private Map<String, List<String>> initAdjacency(Set<String> nodes) {
         Map<String, List<String>> adj = new HashMap<>(Math.max(16, nodes.size() * 2));
         for (String n : nodes)
@@ -206,240 +284,42 @@ public final class GraphValidator {
         for (String n : nodes)
             indeg.put(n, 0);
         return indeg;
+    }   
+
+    
+    private Set<String> extractNodeNames(GraphConfig graph) {
+        // LinkedHashSet preserves declaration order (nice for messages)
+        return graph.getNodes().stream()
+                .map(NodeConfig::getName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    // ---------- Stage registry ----------
-    // private Map<String, StageProvider> resolveStageProviders(GraphConfig graph, ValidationResult result) {
-    //     Map<String, StageProvider> providers = new HashMap<>();
-    //     for (NodeConfig n : graph.getNodes()) {
-    //         String nodeName = n.getName();
-    //         String stageId = (n.getStageConf() != null) ? n.getStageConf().getStageId() : null;
+    private Map<String, NodeConfig> extractNodeMap(GraphConfig graph) {
+        Map<String, NodeConfig> nodeMap = new LinkedHashMap<>();
+        for (NodeConfig node : graph.getNodes()) {
+            nodeMap.put(node.getName(), node);
+        }
 
-    //         if (stageId == null || stageId.isEmpty()) {
-    //             result.addError("Node '" + nodeName + "' has missing stage id");
-    //             continue;
-    //         }
+        return nodeMap;
+    }
 
-    //         Optional<StageProvider> provider = registry.get(stageId);
-    //         if (provider.isPresent()) {
-    //             providers.put(nodeName, provider.get());
-    //         } else {
-    //             result.addError("Node '" + nodeName + "' refers to unknown stage id: " + stageId);
-    //         }
-    //     }
-    //     return providers;
-    // }
-
-    // private ValidationResult checkTypeCohesion(GraphConfig graph) {
-    //     ValidationResult result = new ValidationResult();
-
-    //     Map<String, NodeConfig> nodeByName = graph.getNodes().stream()
-    //             .collect(Collectors.toMap(NodeConfig::getName, n -> n));
-
-    //     Map<String, StageProvider> providerByNode = new HashMap<>();
-    //     for (NodeConfig n : graph.getNodes()) {
-    //         String stageId = (n.getStageConf() != null) ? n.getStageConf().getStageId() : null;
-    //         if (stageId == null || stageId.isEmpty()) {
-    //             result.addError("Node '" + n.getName() + "' has missing stage id (cannot check types)");
-    //             continue;
-    //         }
-    //         Optional<StageProvider> sp = registry.get(stageId);
-    //         if (!sp.isPresent()) {
-    //             result.addError(
-    //                     "Node '" + n.getName() + "' refers to unknown stage id '" + stageId + "' (cannot check types)");
-    //             continue;
-    //         }
-    //         providerByNode.put(n.getName(), sp.get());
-    //     }
-
-    //     // Build indegree and incoming edges
-    //     Map<String, Integer> indeg = new HashMap<>();
-    //     Map<String, List<EdgeConfig>> incoming = new HashMap<>();
-    //     for (NodeConfig n : graph.getNodes()) {
-    //         indeg.put(n.getName(), 0);
-    //         incoming.put(n.getName(), new ArrayList<>());
-    //     }
-    //     for (EdgeConfig e : graph.getEdges()) {
-    //         String from = e.getFrom();
-    //         String to = e.getTo();
-    //         if (!indeg.containsKey(from) || !indeg.containsKey(to))
-    //             continue; // invalid edges handled elsewhere
-    //         indeg.put(to, indeg.get(to) + 1);
-    //         incoming.get(to).add(e);
-    //     }
-
-    //     // Helper: extract binding key(s) for target input's bound positions from a
-    //     // source output
-    //     // Returns a list of TypeRef values corresponding to each bound position in
-    //     // target input (in index order).
-    //     BiFunction<TypeRef, TypeRef, Optional<List<TypeRef>>> extractBindingKeys = (sourceOut,
-    //             targetIn) -> {
-    //         // Entire type is bound: the "key" is the whole source type
-    //         if (targetIn.isBound()) {
-    //             return Optional.of(Collections.singletonList(sourceOut));
-    //         }
-    //         if (!targetIn.isParameterized()) {
-    //             // No bound args present
-    //             return Optional.of(Collections.emptyList());
-    //         }
-    //         // Identify bound positions in target
-    //         List<Integer> boundIdx = new ArrayList<>();
-    //         for (int i = 0; i < targetIn.arity(); i++) {
-    //             if (targetIn.args().get(i).isBound())
-    //                 boundIdx.add(i);
-    //         }
-    //         if (boundIdx.isEmpty()) {
-    //             return Optional.of(Collections.emptyList());
-    //         }
-
-    //         // Best-effort mapping rules:
-    //         // 1) If raw types equal and arity matches: take source args at the same
-    //         // indices.
-    //         if (Objects.equals(sourceOut.rawType(), targetIn.rawType()) &&
-    //                 sourceOut.isParameterized() &&
-    //                 sourceOut.arity() == targetIn.arity()) {
-    //             List<TypeRef> keys = new ArrayList<>(boundIdx.size());
-    //             for (int idx : boundIdx) {
-    //                 TypeRef.Arg sArg = sourceOut.args().get(idx);
-    //                 if (sArg.isBound() || !sArg.concrete().isPresent())
-    //                     return Optional.empty();
-    //                 keys.add(sArg.concrete().get());
-    //             }
-    //             return Optional.of(keys);
-    //         }
-
-    //         // 2) Heuristic for common 1-arity hierarchies (e.g., List<E> -> Iterable<E>)
-    //         if (targetIn.arity() == 1 && !boundIdx.isEmpty() && boundIdx.size() == 1) {
-    //             if (sourceOut.isParameterized() && sourceOut.arity() == 1 &&
-    //                     targetIn.rawType().isAssignableFrom(sourceOut.rawType())) {
-    //                 TypeRef.Arg sArg = sourceOut.args().get(0);
-    //                 if (sArg.isBound() || !sArg.concrete().isPresent())
-    //                     return Optional.empty();
-    //                 return Optional.of(Collections.singletonList(sArg.concrete().get()));
-    //             }
-    //         }
-
-    //         // 3) If target has bound args but we cannot infer mapping, fail
-    //         return Optional.empty();
-    //     };
-
-    //     // 1) First-stage nodes must have concrete input and output
-    //     for (Map.Entry<String, Integer> en : indeg.entrySet()) {
-    //         if (en.getValue() == 0) {
-    //             String node = en.getKey();
-    //             StageProvider sp = providerByNode.get(node);
-    //             if (sp == null)
-    //                 continue; // already reported
-    //             TypeRef in = sp.defaultProfile().getInputType();
-    //             TypeRef out = sp.defaultProfile().getOutputType();
-    //             if (!TypeRefUtils.isConcrete(in) || !TypeRefUtils.isConcrete(out)) {
-    //                 System.out.println(in.isBound() + " " + out.isBound());
-    //                 result.addError(
-    //                         "Source node '" + node + "' must have concrete input and output types, found input=" +
-    //                                 (in == null ? "null" : in.toString()) + ", output=" +
-    //                                 (out == null ? "null" : out.toString()));
-    //             }
-    //         }
-    //     }
-
-    //     // Precompute node input/output types
-    //     Map<String, TypeRef> nodeInType = new HashMap<>();
-    //     Map<String, TypeRef> nodeOutType = new HashMap<>();
-    //     for (String node : nodeByName.keySet()) {
-    //         StageProvider sp = providerByNode.get(node);
-    //         if (sp != null) {
-    //             nodeInType.put(node, sp.defaultProfile().getInputType());
-    //             nodeOutType.put(node, sp.defaultProfile().getOutputType());
-    //         }
-    //     }
-
-    //     // 2) For every edge, output must be assignable to following input
-    //     for (EdgeConfig e : graph.getEdges()) {
-    //         String u = e.getFrom(), v = e.getTo();
-    //         if (!nodeOutType.containsKey(u) || !nodeInType.containsKey(v))
-    //             continue;
-    //         TypeRef outU = nodeOutType.get(u);
-    //         TypeRef inV = nodeInType.get(v);
-    //         if (!TypeRefUtils.isAssignable(outU, inV)) {
-    //             result.addError("Type mismatch on edge " + u + " -> " + v +
-    //                     ": output " + outU + " is not assignable to input " + inV);
-    //         }
-    //     }
-
-    //     // 3) and 4) For each node, all incoming must be assignable; if input uses
-    //     // BOUND, they must agree on the same bound(s)
-    //     for (String node : nodeByName.keySet()) {
-    //         List<EdgeConfig> inEdges = incoming.get(node);
-    //         if (inEdges == null || inEdges.isEmpty())
-    //             continue;
-
-    //         TypeRef targetIn = nodeInType.get(node);
-    //         if (targetIn == null)
-    //             continue;
-
-    //         // 3) If any incoming is not assignable to input -> error
-    //         boolean anyNotAssignable = false;
-    //         for (EdgeConfig e : inEdges) {
-    //             TypeRef srcOut = nodeOutType.get(e.getFrom());
-    //             if (srcOut == null)
-    //                 continue;
-    //             if (!TypeRefUtils.isAssignable(srcOut, targetIn)) {
-    //                 anyNotAssignable = true;
-    //                 result.addError("Node '" + node + "': incoming from '" + e.getFrom() + "' has output " +
-    //                         srcOut + " not assignable to input " + targetIn);
-    //             }
-    //         }
-    //         // If input is BOUND or has bound args, enforce same bound(s) across all inputs
-    //         if ((targetIn.isBound() || targetIn.hasBoundArgs()) && !inEdges.isEmpty()) {
-    //             List<TypeRef> firstKeys = null;
-    //             String firstFrom = null;
-    //             boolean bindingError = false;
-
-    //             for (EdgeConfig e : inEdges) {
-    //                 TypeRef srcOut = nodeOutType.get(e.getFrom());
-    //                 if (srcOut == null)
-    //                     continue;
-    //                 Optional<List<TypeRef>> keysOpt = extractBindingKeys.apply(srcOut, targetIn);
-    //                 if (!keysOpt.isPresent()) {
-    //                     result.addError("Node '" + node + "': cannot infer bound argument(s) from incoming '" +
-    //                             e.getFrom() + "' with output " + srcOut + " against input pattern " + targetIn);
-    //                     bindingError = true;
-    //                     continue;
-    //                 }
-    //                 List<TypeRef> keys = keysOpt.get();
-    //                 if (firstKeys == null) {
-    //                     firstKeys = keys;
-    //                     firstFrom = e.getFrom();
-    //                 } else {
-    //                     if (keys.size() != firstKeys.size()) {
-    //                         result.addError("Node '" + node + "': inconsistent bound arity between inputs '" +
-    //                                 firstFrom + "' and '" + e.getFrom() + "'");
-    //                         bindingError = true;
-    //                     } else {
-    //                         for (int i = 0; i < keys.size(); i++) {
-    //                             TypeRef a = firstKeys.get(i);
-    //                             TypeRef b = keys.get(i);
-    //                             if (!TypeRefUtils.deepEquals(a, b)) {
-    //                                 result.addError("Node '" + node + "': bound type mismatch at position " + i +
-    //                                         " between inputs '" + firstFrom + "' (" + a + ") and '" +
-    //                                         e.getFrom() + "' (" + b + ") for input pattern " + targetIn);
-    //                                 bindingError = true;
-    //                                 break;
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-
-    //             // If any binding error or non-assignable edge found, we've already recorded
-    //             // error(s).
-    //             if (!bindingError && !anyNotAssignable && firstKeys == null) {
-    //                 // No incoming keys could be established; treat as error for robustness
-    //                 result.addError("Node '" + node + "': unable to establish bound type(s) for input " + targetIn);
-    //             }
-    //         }
-    //     }
-
-    //     return result;
-    // }
+    // Helpers for validation checking
+    private List<TypeRef> collectInboundTypes(GraphConfig graph,
+                                          String targetNode,
+                                          Map<String, Map<String, TypeRef>> resolvedOutputs) {
+        List<TypeRef> inbound = new ArrayList<>();
+        for (EdgeConfig e : graph.getEdges()) {
+            if (targetNode.equals(e.getTo())) {
+                String from     = e.getFrom();
+                String fromPort = e.getFromPort();
+    
+                Map<String, TypeRef> fromPorts = resolvedOutputs.get(from);
+                if (fromPorts == null) continue; // Upstream not resolved yet (shouldn't happen in topo order)
+                TypeRef t = fromPorts.get(fromPort);
+                if (t != null) inbound.add(t);
+            }
+        }
+        return inbound;
+    }
 }
