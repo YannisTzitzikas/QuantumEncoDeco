@@ -9,11 +9,12 @@
         "params": { "path": "input.json" }
       },
       "splitter": {
-        "type": "BeanFieldsSplitStrategy",
+        "type": "BeanFields",
         "params": {},
         "portMappings": {
-          "predicates": "predicates",
-          "entities": "subjects"
+          "predicates": "predicate",
+          "entities": "subject",
+          "a": "subject"
         }
       }
     },
@@ -33,6 +34,7 @@
     }
   ],
   "edges": [
-    { "from": "read.predicates", "to": "r1" }
+    { "from": "read.predicates", "to": "r1" },
+    { "from": "read.entities", "to": "r2" }
   ]
 }

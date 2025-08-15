@@ -6,6 +6,9 @@ import com.csd.config.GraphConfig;
 import com.csd.config.GraphConfigMapper;
 import com.csd.config.JobConfig;
 import com.csd.config.JobConfigMapper;
+import com.csd.core.split.SplitterRegistry;
+import com.csd.core.stage.StageRegistry;
+import com.csd.validation.GraphSanitizer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +35,12 @@ public final class Main {
             System.exit(2);
         }
 
+        SplitterRegistry splitReg = new SplitterRegistry();
+        StageRegistry    stageReg = new StageRegistry();
+
+        stageReg.discoverViaSPI();
+        splitReg.discoverViaSPI();
+
         try {
             Map<String, Object> intermediate = null;
 
@@ -50,6 +59,10 @@ public final class Main {
 
             GraphConfigMapper gmap = new GraphConfigMapper();
             GraphConfig   graphConf = gmap.map(intermediate); 
+
+            GraphSanitizer validator = new GraphSanitizer(stageReg, splitReg);
+            
+            log.info("Validation Results are: {}" ,validator.validate(graphConf));
             log.info("Loaded GraphConfig: {}", graphConf);
 
         } catch (IllegalArgumentException e) {

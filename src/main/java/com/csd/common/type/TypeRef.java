@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * This is vital to our DAG implementation due to the fact that some stages
@@ -16,7 +15,6 @@ import java.util.Objects;
  * 
  * @author George Theodorakis (csd4881@csd.uoc.gr)
  */
-
 public final class TypeRef {
     private final Class<?>  rawType;
     private final List<Arg> args;       // empty for non-parameterized
@@ -26,7 +24,7 @@ public final class TypeRef {
     private TypeRef(boolean isBoundRef, boolean hasBoundArgument, Class<?> rawType, List<Arg> args) {
         this.isBoundRef = isBoundRef;
         this.hasBoundArgument = hasBoundArgument;
-        this.rawType = Objects.requireNonNull(rawType, "rawType");
+        this.rawType = rawType;
         this.args = Collections.unmodifiableList(new ArrayList<>(args));
         validateArity();
     }
@@ -55,6 +53,7 @@ public final class TypeRef {
 
     private void validateArity() {
         int expected = 0;
+        if (isBoundRef) return;
         if (rawType.getTypeParameters().length > 0) expected = rawType.getTypeParameters().length;
 
         if (expected != args.size()) {
@@ -64,6 +63,7 @@ public final class TypeRef {
     }
 
     @Override public String toString() {
+        if (isBoundRef)     return "_BOUND_";
         if (args.isEmpty()) return rawType.getTypeName();
         StringBuilder sb = new StringBuilder(rawType.getTypeName()).append('<');
         for (int i = 0; i < args.size(); i++) {

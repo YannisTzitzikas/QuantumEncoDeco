@@ -12,13 +12,12 @@ import com.csd.core.split.SplitterDescriptor;
 public final class BeanFieldDescriptor extends SplitterDescriptor {
     public BeanFieldDescriptor()
     {
-        super("BeanField", TypeRef.bound(),TypeRef.bound(),false, Collections.emptyList());
+        super("BeanFields", TypeRef.bound(),TypeRef.bound(),false, Collections.emptyList());
     }
 
     @Override
     public TypeRef projectTypeOutput(TypeRef passedInput, String param) {
-        if (!TypeRefUtils.isConcrete(passedInput) ||
-            !TypeRefUtils.isAssignable(passedInput, getInputType())) return null;
+        if (!TypeRefUtils.isAssignable(passedInput, getInputType())) return null;
 
         TypeRef inputProjection = TypeRefUtils.GCType(passedInput, getInputType());
         if (inputProjection == null) return null;
@@ -32,13 +31,7 @@ public final class BeanFieldDescriptor extends SplitterDescriptor {
             return null;
         }
 
-        TypeRef current = inputProjection;
-        for (AccessStep step : steps) {
-            TypeRef nextType = TypeRef.simple(step.getResultType());
-            current = TypeRefUtils.GCType(current, nextType);
-            if (current == null) return null;
-        }
-    
+        TypeRef current = TypeRef.simple(steps.get(steps.size()-1).getResultType());
         return current;
     }
 }

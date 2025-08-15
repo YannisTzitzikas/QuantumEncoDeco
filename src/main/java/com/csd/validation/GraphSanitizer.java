@@ -6,6 +6,8 @@ import com.csd.config.EdgeConfig;
 import com.csd.config.GraphConfig;
 import com.csd.config.NodeConfig;
 import com.csd.config.RouteConfig;
+import com.csd.config.SplitterConfig;
+import com.csd.config.StageConfig;
 import com.csd.core.stage.StageDescriptor;
 import com.csd.core.stage.StageRegistry;
 import com.csd.core.split.SplitterDescriptor;
@@ -13,6 +15,7 @@ import com.csd.core.split.SplitterRegistry;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -25,13 +28,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.stream.Collectors;
 
-@Deprecated
-public final class GraphValidator {
+public final class GraphSanitizer {
 
     private final StageRegistry     stageRegistry;
     private final SplitterRegistry  splitterRegistry;
 
-    public GraphValidator(StageRegistry stageRegistry, SplitterRegistry splitterRegistry) {
+    public GraphSanitizer(StageRegistry stageRegistry, SplitterRegistry splitterRegistry) {
         this.stageRegistry    = Objects.requireNonNull(stageRegistry, "StageRegistry");
         this.splitterRegistry = Objects.requireNonNull(splitterRegistry, "StageRegistry");
     }
@@ -48,8 +50,11 @@ public final class GraphValidator {
 
         // Structural Checks
         result.merge(validateUniqueNames(graph, nodeNames));
+        result.merge(validateStagesExist(graph, nodeNames));
+        result.merge(validateSplittersExist(graph, nodeNames));
         result.merge(validateEdgesReferenceExistingNodes(graph, nodeNames, nodeMap));
         result.merge(validatekUnusedNodes(graph, nodeNames));
+        
         List<String> topology = validateTopology(graph, nodeNames, result);
 
         // If invalid, skip the type cohesion check
@@ -58,6 +63,46 @@ public final class GraphValidator {
 
         return result;
     }
+
+    private ValidationResult validateStagesExist(GraphConfig graph, Set<String> nodeNames)
+    {
+        ValidationResult result = new ValidationResult();
+
+        for (Iterator<NodeConfig> it = graph.getNodes().iterator(); it.hasNext();) {
+            NodeConfig n = it.next();
+            StageConfig stageConf = n.getRouteConf().getStageConf();
+
+            // Stage Configuration is required not to be null
+            if (!stageRegistry.getDescriptor(stageConf.getStageId()).isPresent()) {
+                it.remove();
+                nodeNames.remove(n.getName()); 
+                result.addWarning("Removed node '" + n.getName() + "'. Stage with ID " + stageConf.getStageId() + " does not exist");
+            }
+        }
+
+        return result;
+    }
+
+    
+    private ValidationResult validateSplittersExist(GraphConfig graph, Set<String> nodeNames)
+    {
+        ValidationResult result = new ValidationResult();
+
+        for (Iterator<NodeConfig> it = graph.getNodes().iterator(); it.hasNext();) {
+            NodeConfig     n              = it.next();
+            SplitterConfig splitterConfig = n.getRouteConf().getSplitterConf();
+
+            // Stage Configuration is required not to be null
+            if (splitterConfig != null && !splitterRegistry.getDescriptor(splitterConfig.getType()).isPresent()) {
+                it.remove();
+                nodeNames.remove(n.getName()); 
+                result.addWarning("Removed node '" + n.getName() + "'. Splitter with ID " + splitterConfig.getType() + " does not exist");
+            }
+        }
+
+        return result;
+    }
+
 
     private ValidationResult validateUniqueNames(GraphConfig graph, Set<String> nodeNames) {
         ValidationResult result = new ValidationResult();
@@ -149,6 +194,37 @@ public final class GraphValidator {
         return result;
     }
 
+
+    @SuppressWarnings("unused")
+    private ValidationResult validateUnusedPorts(GraphConfig graph) {
+        ValidationResult result = new ValidationResult();
+    
+        Map<String, Set<String>> usedPortsByNode = new HashMap<>();
+        for (EdgeConfig edge : graph.getEdges()) {
+            if (edge.getFrom() != null && edge.getFromPort() != null) {
+                usedPortsByNode
+                    .computeIfAbsent(edge.getFrom(), k -> new HashSet<>())
+                    .add(edge.getFromPort());
+            }
+        }
+    
+        for (NodeConfig node : graph.getNodes()) {
+            Set<String> usedPorts = usedPortsByNode.getOrDefault(node.getName(), Collections.emptySet());
+    
+            for (Iterator<Map.Entry<String, String>> it = node.getRouteConf().getEffectivePorts().entrySet().iterator(); it.hasNext();) {
+                Map.Entry<String, String> entry = it.next();
+                String portName = entry.getKey();
+                if (!usedPorts.contains(portName)) {
+                    node.getRouteConf().getEffectivePorts().remove(portName);
+                    result.addWarning("Removed unused port '" + portName + "' from node '" + node.getName() + "'");
+                }
+            }
+        }
+    
+        return result;
+    }
+
+
     /**
     * It is used to check whether the Graph is Acyclic or not.
     * 
@@ -207,6 +283,9 @@ public final class GraphValidator {
         return topo;
     }
 
+
+
+
     private ValidationResult validateTypeCohesion(GraphConfig graph,
                                                   Set<String> nodeNames,
                                                   List<String> topology,
@@ -214,31 +293,32 @@ public final class GraphValidator {
     {
         // Holds resolved types for outputs: (nodeName, portName) -> concrete TypeRef
         Map<String, Map<String, TypeRef>> resolvedOutputs = new HashMap<>();
-        ValidationResult                  result         = new ValidationResult();
+        ValidationResult                  result          = new ValidationResult();
 
-        for (String nodeName : topology) {
+        for (int i = 0; i < topology.size(); i++) {
 
+            String nodeName   = topology.get(i);
             NodeConfig  node  = nodeMap.get(nodeName);
             RouteConfig route = node.getRouteConf();
 
             String      stageId     = route.getStageConf().getStageId();
             String      splitterId  = (route.getSplitterConf() == null) ? null : route.getSplitterConf().getType();  
 
-            StageDescriptor    stageDesc    = stageRegistry.getDescriptor(stageId).get();
-            SplitterDescriptor splitterDesc = splitterRegistry.getDescriptor(splitterId).get();
-        
+            StageDescriptor    stageDesc    = stageRegistry.getDescriptor(stageId).isPresent()       ? stageRegistry.getDescriptor(stageId).get()       : null;
+            SplitterDescriptor splitterDesc = splitterRegistry.getDescriptor(splitterId).isPresent() ? splitterRegistry.getDescriptor(splitterId).get() : null;
             List<TypeRef> inboundTypes = collectInboundTypes(graph, nodeName, resolvedOutputs);
-        
+
             TypeRef expectedInput = stageDesc.getInputType();
             TypeRef commonInput   = TypeRefUtils.GCTypeInList(inboundTypes);
 
-            if (commonInput == null)
+            if (commonInput == null && i !=0)
             {
-                result.addError("Type mismatch between input nodes feeding '" + nodeName);
+                result.addError("Type mismatch between input nodes feeding '" + nodeName + '\'');
                 return result;
-            } 
+            }
+            else commonInput = TypeRef.bound(); 
             
-            TypeRef resolvedInput = TypeRefUtils.GCTypeInList(inboundTypes);
+            TypeRef resolvedInput = TypeRefUtils.GCType(commonInput, expectedInput);
 
             if (resolvedInput == null){
                 result.addError("Inbound unified type " + commonInput + " is not compatible with expected bound input " +
@@ -247,18 +327,18 @@ public final class GraphValidator {
             } 
         
             if (splitterDesc == null) {
-                TypeRef outType = TypeRefUtils.GCType(stageDesc.getOutputType(), resolvedInput);
+                TypeRef outType = stageDesc.getOutputType();
                 resolvedOutputs.computeIfAbsent(nodeName, k -> new HashMap<>())
                             .put(RouteConfig.DEFAULT_OUT_PORT, outType);
             } else {
-                TypeRef stageOutConcrete = TypeRefUtils.GCType(stageDesc.getOutputType(), resolvedInput);
+                TypeRef stageOutConcrete = stageDesc.getOutputType();
                 if (!TypeRefUtils.isAssignable(stageOutConcrete, splitterDesc.getInputType())) {
                     result.addError("Splitter input type mismatch on node " + nodeName);
                     return result;
                 }
                 Map<String, String> ports = node.getRouteConf().getSplitterConf().getPortMappings();
                 for (String portName : ports.keySet()) {
-                    TypeRef portOut = TypeRefUtils.GCType(splitterDesc.getOutputType(), stageOutConcrete);
+                    TypeRef portOut = splitterDesc.projectTypeOutput(stageOutConcrete, ports.get(portName));
                     resolvedOutputs.computeIfAbsent(nodeName, k -> new HashMap<>())
                                 .put(portName, portOut);
                 }
@@ -267,9 +347,6 @@ public final class GraphValidator {
 
         return result;
     }
-
-
-
 
     //-------- UTILITIES -------------
     private Map<String, List<String>> initAdjacency(Set<String> nodes) {

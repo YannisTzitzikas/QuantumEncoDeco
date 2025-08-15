@@ -19,7 +19,7 @@ public final class SplitterConfig {
 
     private final String type;                        // strategy class name
     private final SplitterConfig delegate;            // optional nested splitter
-    private final Map<String, String> portMappings;   // portId → path/expression
+    private       Map<String, String> portMappings;   // portId → path/expression
     private final Map<String, Object> params;         // optional strategy params
 
     public SplitterConfig(String type,
@@ -33,7 +33,7 @@ public final class SplitterConfig {
             throw new IllegalArgumentException("SplitterConfig must include at least one port mapping.");
         }
 
-        this.portMappings = Collections.unmodifiableMap(new LinkedHashMap<>(portMappings));
+        this.portMappings = new LinkedHashMap<>(portMappings);
         this.params = params == null
             ? Collections.emptyMap()
             : Collections.unmodifiableMap(new LinkedHashMap<>(params));

@@ -1,5 +1,6 @@
 package com.csd.common.params;
 
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import com.csd.common.type.TypeRef;
@@ -12,8 +13,8 @@ public final class ParameterDescriptor {
     private final Predicate<Object> validator; // may be null
 
     private ParameterDescriptor(String name, TypeRef type, boolean required, Object value, Predicate<Object> validator) {
-        this.name = name;
-        this.type = type;
+        this.name = Objects.requireNonNull(name);
+        this.type = Objects.requireNonNull(type);;
         this.required = required;
         this.value = value;
         this.validator = validator;
