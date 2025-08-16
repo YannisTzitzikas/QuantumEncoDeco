@@ -17,13 +17,8 @@ public final class Message<T> {
         return new Message<>(MessageKind.DATA, payload);
     }
 
-    public static Message<Void> eos(String edgeId) {
-        // if you want to carry edgeId, change payload type accordingly
+    public static <T> Message<T> eos() {
         return new Message<>(MessageKind.EOS, null);
-    }
-
-    public static <T> Message<T> control(T payload) {
-        return new Message<>(MessageKind.CONTROL, payload);
     }
 
     // ----- Accessors -----
@@ -40,5 +35,5 @@ public final class Message<T> {
         return "Message{" + kind + ", payload=" + Objects.toString(payload) + "}";
     }
 
-    public enum MessageKind { DATA, EOS, CONTROL }
+    public enum MessageKind { DATA, EOS }
 }
