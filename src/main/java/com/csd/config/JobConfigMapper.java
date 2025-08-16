@@ -31,30 +31,16 @@ public final class JobConfigMapper {
         String inputPath   = getString(obj, "input");
         String outputPath  = getString(obj, "output");
         String storagePath = getString(obj, "storage");
-        String graphPath   = getString(obj, "graph");
 
         return new JobConfig.Builder()
             .withInputPath(inputPath)
             .withOutputPath(outputPath)
             .withStorageSettingsPath(storagePath)
-            .withGraphConfigPath(graphPath)
             .build();
     }
 
     private static String getString(Map<String, Object> map, String key) {
         Object v = map.get(key);
         return v instanceof String ? (String) v : null;
-    }
-
-    @SuppressWarnings("unused")
-    private static Integer getInt(Map<String, Object> map, String key) {
-        Object v = map.get(key);
-        if (v instanceof Number) return ((Number) v).intValue();
-        if (v instanceof String) {
-            try {
-                return Integer.parseInt((String) v);
-            } catch (NumberFormatException ignored) {}
-        }
-        return null;
     }
 }

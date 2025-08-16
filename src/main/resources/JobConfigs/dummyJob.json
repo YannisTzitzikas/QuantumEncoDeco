@@ -1,6 +1,0 @@
-{
-    "input":  "src\\main\\resources\\GraphConfigs\\Dummy.json",
-    "output": "src\\main\\resources\\GraphConfigs\\Dummy.json",
-    "storage": "src\\main\\resources\\GraphConfigs\\Dummy.json",
-    "graph": "src\\main\\resources\\GraphConfigs\\Dummy.json"
-}

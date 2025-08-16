@@ -12,8 +12,7 @@ import java.nio.file.Paths;
 public final class JobConfig {
 
     // Default values as constants
-    private static final String DEFAULT_STORAGE_SETTINGS_PATH = "nonExistent";
-    private static final String DEFAULT_GRAPH_CONFIG_PATH     = "R1Encoder.json";
+    private static final String DEFAULT_STORAGE_SETTINGS_PATH = "__PLACE_HOLDER__";
     private static final String DEFAULT_OUTPUT_PATH           = "output.txt";
     private static final String DEFAULT_INPUT_PATH            = "input.txt";
 
@@ -21,14 +20,11 @@ public final class JobConfig {
     private final Path          inputPath;
     private final Path          outputPath;
     private final Path          storageSettingsPath;
-    private final Path          graphPath;
-
 
     //----- Constructors ----- //
     private JobConfig(Builder builder) {
         this.outputPath          = builder.outputPath;
         this.inputPath           = builder.inputPath;
-        this.graphPath           = builder.graphPath;
         this.storageSettingsPath = builder.storageSettingsPath;
     }
 
@@ -36,7 +32,6 @@ public final class JobConfig {
     public static class Builder {
         private Path    inputPath           = Paths.get(DEFAULT_INPUT_PATH);
         private Path    outputPath          = Paths.get(DEFAULT_OUTPUT_PATH);
-        private Path    graphPath           = Paths.get(DEFAULT_GRAPH_CONFIG_PATH);
         private Path    storageSettingsPath = Paths.get(DEFAULT_STORAGE_SETTINGS_PATH);
         
         public Builder withInputPath(String path) {
@@ -46,11 +41,6 @@ public final class JobConfig {
     
         public Builder withOutputPath(String path) {
             if(path != null) this.outputPath = Paths.get(path);
-            return this;
-        }
-
-        public Builder withGraphConfigPath(String path) {
-            if(path != null) this.graphPath = Paths.get(path);
             return this;
         }
 
@@ -77,19 +67,13 @@ public final class JobConfig {
         return storageSettingsPath;
     }
 
-
-    public Path getGraphPath() {
-        return graphPath;
-    }
-
     //----- toString ----- //
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("\tInput file: ").append(inputPath)
                .append("\n\tOutput file: ").append(outputPath)
-               .append("\n\tStorage Config file: ").append(storageSettingsPath)
-               .append("\n\tGraph Config file: ").append(graphPath);
+               .append("\n\tStorage Config file: ").append(storageSettingsPath);
 
         return builder.toString();
     }
