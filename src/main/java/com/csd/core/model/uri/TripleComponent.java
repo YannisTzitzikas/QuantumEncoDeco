@@ -22,4 +22,18 @@ public final class TripleComponent {
     public String toString() {
         return role + " | " + kind + " | " + value;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        TripleComponent other = (TripleComponent) obj;
+        return value != null ? value.equals(other.value) : other.value == null;
+    }
+    
+    @Override
+    public int hashCode() {
+        return value != null ? value.hashCode() : 0;
+    }
+
 }

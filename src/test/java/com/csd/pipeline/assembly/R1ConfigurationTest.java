@@ -11,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.junit.Test;
 
+import com.csd.common.metrics.StatisticsCollector;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.model.uri.URITriple;
@@ -23,6 +24,7 @@ import com.csd.pipeline.filters.MapStoreFilterVoid;
 import com.csd.pipeline.filters.TripleComponentExtractorFilter;
 import com.csd.pipeline.pumps.UriTripleBatchPump;
 import com.csd.pipeline.sinks.StorageExportSink;
+import com.csd.pipeline.sinks.UriTripleFileSink;
 import com.csd.storage.StorageEngineFactory;
 
 public class R1ConfigurationTest {
@@ -54,6 +56,7 @@ public class R1ConfigurationTest {
         Path tempDir = Files.createTempDirectory("temp");
         Path testPath = Paths.get("C:\\Users\\User\\Downloads\\CIDOC_CRM_v7.1.1.rdfs.xml");
 
+        StatisticsCollector stats = new StatisticsCollector();
         // Setup pipes
         InMemoryPipe<List<URITriple>> pipe1 = new InMemoryPipe<>();
         InMemoryPipe<Set<TripleComponent>> pipe2 = new InMemoryPipe<>();
@@ -90,24 +93,21 @@ public class R1ConfigurationTest {
         sinkBindings.bindInput(StorageExportSink.IN, pipe5);
 
         PortBindings encodeBindings = new PortBindings();
-        encodeBindings.bindInput(StorageExportSink.IN, pipe6);
+        encodeBindings.bindInput(UriTripleFileSink.IN, pipe6);
 
         // Create components
         UriTripleBatchPump pump = new UriTripleBatchPump(
                 testPath,
                 "*.ttl",
                 1000,
-                pumpBindings);
+                pumpBindings, stats);
 
         TripleComponentExtractorFilter extractor = new TripleComponentExtractorFilter(extractorBindings);
-
-        ComponentRemoverFilter remover = new ComponentRemoverFilter(removerBindings, storage);
-
+        ComponentRemoverFilter remover = new ComponentRemoverFilter(removerBindings, storage, stats);
         BasisEncoderFilter basis = new BasisEncoderFilter(basisBindings);
-
         MapStoreFilterVoid store = new MapStoreFilterVoid(storeBindings, storage);
-
         StorageExportSink sink = new StorageExportSink(sinkBindings, storage);
+        UriTripleFileSink sink2 = new UriTripleFileSink( testPath,"*.ttl",encodeBindings,storage, stats,Paths.get("r1Encoded.r1"));
 
         // Run pipeline components in threads
         Thread pumpThread = new Thread(pump);
@@ -116,6 +116,7 @@ public class R1ConfigurationTest {
         Thread basisThread = new Thread(basis);
         Thread storeThread = new Thread(store);
         Thread sinkThread = new Thread(sink);
+        Thread sink2Thread = new Thread(sink2);
 
         pumpThread.start();
         extractorThread.start();
@@ -123,8 +124,10 @@ public class R1ConfigurationTest {
         basisThread.start();
         storeThread.start();
         sinkThread.start();
+        sink2Thread.start();
 
         // Wait for EOS to propagate
+        System.out.println(stats);
 
         pumpThread.join();
         extractorThread.join();
@@ -132,6 +135,8 @@ public class R1ConfigurationTest {
         basisThread.join();
         storeThread.join();
         sinkThread.join();
+        sink2Thread.join();
 
+        System.out.println(stats);
     }
 }

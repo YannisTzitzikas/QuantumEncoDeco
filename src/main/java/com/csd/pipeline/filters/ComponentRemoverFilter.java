@@ -1,5 +1,6 @@
 package com.csd.pipeline.filters;
 
+import com.csd.common.metrics.StatisticsCollector;
 import com.csd.common.utils.serializer.Serializer;
 import com.csd.common.utils.serializer.StringSerializer;
 import com.csd.core.model.Message;
@@ -18,6 +19,7 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -36,10 +38,18 @@ public class ComponentRemoverFilter extends AbstractFilter {
     private final StorageEngine storage;
     private final Serializer<String> serializer;
 
+    private final Optional<StatisticsCollector> stats;
+
     public ComponentRemoverFilter(PortBindings bindings, StorageEngine storage) {
+        this(bindings,storage,null);
+    }   
+
+
+    public ComponentRemoverFilter(PortBindings bindings, StorageEngine storage, StatisticsCollector stats ) {
         super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy());
         this.storage = Objects.requireNonNull(storage, "storage");
         this.serializer = new StringSerializer();
+        this.stats = Optional.ofNullable(stats);
     }   
 
     @Override
@@ -79,6 +89,9 @@ public class ComponentRemoverFilter extends AbstractFilter {
             for (int i = 0; i < components.size(); i++) {
                 if (!existsBits.get(i)) {
                     remaining.add(components.get(i));
+                    if(stats.isPresent())
+                        if(components.get(i).getRole() == TripleComponent.Role.PREDICATE) stats.get().recordUniquePredicate();
+                        else stats.get().recordUniqueEntity();
                 }
             }
         } catch (StorageException e) {
