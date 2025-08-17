@@ -16,10 +16,10 @@ import java.util.List;
 
 public class TripleComponentExtractorFilter extends AbstractFilter {
 
-    public static final InputPort<Iterable<URITriple>> IN =
+    public static final InputPort<List<URITriple>> IN =
         new InputPort<>("triples");
     public static final OutputPort<List<TripleComponent>> OUT =
-        new OutputPort<List<TripleComponent>>("components");
+        new OutputPort<>("components");
 
 
     public TripleComponentExtractorFilter(PortBindings bindings) {
@@ -28,7 +28,7 @@ public class TripleComponentExtractorFilter extends AbstractFilter {
 
     @Override
     protected void process(Batch in, Emitter out) throws Exception {
-        Message<Iterable<URITriple>> msg = in.pop(IN);
+        Message<List<URITriple>> msg = in.pop(IN);
         if (msg.getKind() == Message.MessageKind.EOS) {
             out.emit(OUT, Message.eos());
             return;
@@ -36,6 +36,7 @@ public class TripleComponentExtractorFilter extends AbstractFilter {
 
         List<TripleComponent> components = new ArrayList<>();
         for (URITriple t : msg.getPayload()) {
+            components.add(t.getPredicate());
             components.add(t.getSubject());
             components.add(t.getObject());
         }
