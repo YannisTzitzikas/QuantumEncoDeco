@@ -84,7 +84,6 @@ public class OntologyURIStreamer implements URIStreamer {
 
     @Override
     public void close() throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'close'");
+        
     }
 }

@@ -1,6 +1,7 @@
 package com.csd.pipeline.sinks;
 
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -31,25 +32,26 @@ public final class StorageExportSink extends AbstractSink {
 
 
   @Override
-    protected void process(Batch in, Emitter out) throws Exception {
-        // Write to stdout; flush but do NOT close System.out.
+    protected void drain(Batch in, Emitter out) throws Exception {
+        in.pop(IN);
+        try (// Write to stdout; flush but do NOT close System.out.
         BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
+                new OutputStreamWriter(new FileOutputStream("map.test"), StandardCharsets.UTF_8))) {
+            // Stream through the storage, decode, and write "String Number"
+            storage.entries().forEach(entry  -> {
+                final String key = stringSer.deserialize(entry.getKey());
+                final Integer val = intSer.deserialize(entry.getValue());
+                try {
+                    writer.write(key);
+                    writer.write(' ');
+                    writer.write(Integer.toString(val));
+                    writer.newLine();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
 
-        // Stream through the storage, decode, and write "String Number"
-        storage.entries().forEach(entry  -> {
-            final String key = stringSer.deserialize(entry.getKey());
-            final Integer val = intSer.deserialize(entry.getValue());
-            try {
-                writer.write(key);
-                writer.write(' ');
-                writer.write(Integer.toString(val));
-                writer.newLine();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        writer.flush();
+            writer.flush();
+        }
     }
 }

@@ -39,7 +39,7 @@ public class R1ConfigurationTest {
     @Test
     public void testR1Configuration() throws Exception {
         // Create test data directory and file
-        Path tempDir = Files.createTempDirectory("r1test");
+        Path tempDir = Files.createTempDirectory("temp");
         Path testFile  = Paths.get("C:\\Users\\User\\Downloads\\CIDOC_CRM_v7.1.1.rdfs.xml");
 
         // Setup pipes
@@ -111,6 +111,7 @@ public class R1ConfigurationTest {
         removerThread.start();
         basisThread.start();
         storeThread.start();
+        sinkThread.start();
         
         // Wait for EOS to propagate
         

@@ -43,19 +43,19 @@ public final class RocksRuntimeMapper {
                 o.setTableFormatConfig(tableCfg);
             }
 
-            try (ReadOptions r = new ReadOptions()) {
-                try (WriteOptions w = new WriteOptions()) {
-                    
-                    r.setFillCache(ro.isFillCacheOnReads());
-                    w.setDisableWAL(ro.isDisableWAL())
-                     .setSync(ro.isSyncWrites());
 
-                    Path p = Paths.get(ro.getPath());
-                    Files.createDirectories(p);
+            ReadOptions r = new ReadOptions();
+            r.setFillCache(ro.isFillCacheOnReads());
+            
+            WriteOptions w = new WriteOptions();
 
-                    return new RocksRuntime(o, r, w, p, ro.getMultiGetChunk());
-                }
-            }
+            w.setDisableWAL(ro.isDisableWAL())
+             .setSync(ro.isSyncWrites());
+
+            Path p = Paths.get(ro.getPath());
+            Files.createDirectories(p);
+
+            return new RocksRuntime(o, r, w, p, ro.getMultiGetChunk());
         } catch (Exception e) {
             throw new StorageException("Failed to build Rocks runtime", e);
         }

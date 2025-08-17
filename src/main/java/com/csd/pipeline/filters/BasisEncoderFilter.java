@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class BasisEncoderFilter extends AbstractFilter {
 
@@ -21,7 +22,7 @@ public class BasisEncoderFilter extends AbstractFilter {
     public static final OutputPort<Map<String,Integer>> OUT =
         new OutputPort<>("basis-mapping");
 
-    int count = 0;
+    AtomicInteger count = new AtomicInteger(0);
 
     public BasisEncoderFilter(PortBindings bindings) {
         super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy());
@@ -38,9 +39,10 @@ public class BasisEncoderFilter extends AbstractFilter {
         Map<String, Integer> map = new HashMap<>();
 
         for (TripleComponent component : msg.getPayload()) {
-            map.putIfAbsent(component.getValue(), count);
+            map.computeIfAbsent(component.getValue(), k -> count.getAndIncrement());
         }
 
+        logger.info("Count at end of batch equals {}", count.get());
         out.emit(OUT, Message.data(map));
     }
 }

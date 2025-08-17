@@ -282,12 +282,8 @@ public final class RocksDBStorageEngine implements StorageEngine {
     }
 
     private static WriteOptions defaultWriteOptions() {
-
         WriteOptions wo = new WriteOptions();
-
-        wo.setDisableWAL(false)
-          .setSync(false);
-
+        wo.setDisableWAL(false).setSync(true);
         return wo;
     }
 }

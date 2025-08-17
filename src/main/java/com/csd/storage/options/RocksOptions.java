@@ -77,7 +77,7 @@ public final class RocksOptions implements StorageOptions {
     public static final class Builder {
         private String path;
         private boolean disableWAL = false;
-        private boolean syncWrites = false;
+        private boolean syncWrites = true;
         private int parallelism = Math.max(2, Runtime.getRuntime().availableProcessors());
         private boolean fillCacheOnReads = true;
         private int blockCacheMB = 256;

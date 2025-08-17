@@ -11,4 +11,12 @@ public abstract class AbstractSink extends AbstractFilter {
                            CoordinationPolicy policy) {
         super(inputs, Collections.emptyList(), bindings, policy);
     }
+
+    @Override
+    protected void process(Batch in, Emitter out) throws Exception {
+        drain(in, out);
+        stop();
+    }
+
+    abstract protected void drain(Batch in, Emitter out) throws Exception;
 }
