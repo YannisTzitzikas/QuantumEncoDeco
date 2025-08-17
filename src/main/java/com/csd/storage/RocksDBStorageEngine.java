@@ -8,10 +8,17 @@ import com.csd.storage.options.RocksRuntime;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * RocksDB-backed StorageEngine with byte[] keys and values.
@@ -116,8 +123,11 @@ public final class RocksDBStorageEngine implements StorageEngine {
         }
 
         try (WriteBatch batch = new WriteBatch()) {
-            for (Map.Entry<byte[], byte[]> e : entries.entrySet()) {
-                batch.put(e.getKey(), e.getValue());
+            for (Map.Entry<byte[],byte[]> e: entries.entrySet())
+            {
+                byte[] keyCopy = Arrays.copyOf(e.getKey(), e.getKey().length);
+                byte[] valCopy = Arrays.copyOf(e.getValue(), e.getValue().length);
+                batch.put(keyCopy, valCopy);
             }
             db.write(writeOptions, batch);
         } catch (RocksDBException e) {
@@ -158,6 +168,34 @@ public final class RocksDBStorageEngine implements StorageEngine {
             i = end;
         }
         return bits;
+    }
+
+    @Override
+    public Stream<Map.Entry<byte[], byte[]>> entries() throws StorageException {
+        ensureOpen();
+        RocksIterator iterator = db.newIterator(readOptions);
+        iterator.seekToFirst();
+    
+        // Build a Stream backed by the iterator
+        Spliterator<Map.Entry<byte[], byte[]>> spliterator =
+            Spliterators.spliteratorUnknownSize(new Iterator<Map.Entry<byte[], byte[]>>() {
+                @Override
+                public boolean hasNext() {
+                    return iterator.isValid();
+                }
+    
+                @Override
+                public Map.Entry<byte[], byte[]> next() {
+                    byte[] key = iterator.key();
+                    byte[] value = iterator.value();
+                    iterator.next();
+                    return new AbstractMap.SimpleImmutableEntry<>(key, value);
+                }
+            }, Spliterator.ORDERED | Spliterator.NONNULL);
+    
+        // Ensure RocksIterator is closed when stream is closed
+        return StreamSupport.stream(spliterator, false)
+                            .onClose(iterator::close);
     }
 
     @Override
@@ -247,7 +285,7 @@ public final class RocksDBStorageEngine implements StorageEngine {
 
         WriteOptions wo = new WriteOptions();
 
-        wo.setDisableWAL(true)
+        wo.setDisableWAL(false)
           .setSync(false);
 
         return wo;

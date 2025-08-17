@@ -1,5 +1,6 @@
 package com.csd.pipeline.filters;
 
+import com.csd.common.utils.serializer.IntegerSerializer;
 import com.csd.common.utils.serializer.StringSerializer;
 import com.csd.core.model.Message;
 import com.csd.core.pipeline.AbstractFilter;
@@ -28,7 +29,8 @@ public class MapStoreFilterVoid extends AbstractFilter {
         new OutputPort<>("done");
 
     private final StorageEngine storage;
-    private final StringSerializer stringSer = new StringSerializer();
+    private final StringSerializer  stringSer  = new StringSerializer();
+    private final IntegerSerializer intSer     = new IntegerSerializer();
 
     public MapStoreFilterVoid(PortBindings bindings, StorageEngine storage) {
         super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy());
@@ -60,7 +62,7 @@ public class MapStoreFilterVoid extends AbstractFilter {
         Map<byte[], byte[]> toPut = new HashMap<>(payload.size());
         for (Map.Entry<String, Integer> e : payload.entrySet()) {
             byte[] k = stringSer.serialize(e.getKey());
-            byte[] v = stringSer.serialize(String.valueOf(e.getValue()));
+            byte[] v = intSer.serialize(e.getValue());
             toPut.put(k, v);
         }
 

@@ -3,6 +3,7 @@ package com.csd.core.storage;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public interface StorageEngine {
 
@@ -31,6 +32,12 @@ public interface StorageEngine {
      * where bit i is true if keys.get(i) exists.
      */
     BitSet containsAll(List<byte[]> keys) throws StorageException;
+
+    /**
+     * Sequentially stream all key/value pairs.
+     * The caller MUST close the stream to release resources.
+     */
+    Stream<Map.Entry<byte[], byte[]>> entries() throws StorageException;
 
     /**
      * Remove all entries (optional operation).

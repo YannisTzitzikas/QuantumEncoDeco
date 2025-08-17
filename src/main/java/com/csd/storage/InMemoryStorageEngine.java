@@ -1,11 +1,13 @@
 package com.csd.storage;
 
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import com.csd.core.storage.StorageEngine;
 import com.csd.core.storage.StorageException;
@@ -135,4 +137,15 @@ public final class InMemoryStorageEngine implements StorageEngine {
             return hash;
         }
     }
+
+    @Override
+    public Stream<Map.Entry<byte[], byte[]>> entries() throws StorageException {
+        ensureOpen();
+        // Wrap in new Key/Value copies for safety
+        return map.entrySet().stream()
+                .map(e -> new AbstractMap.SimpleImmutableEntry<>(
+                        copy(e.getKey().bytes), 
+                        copy(e.getValue())));
+    }
+
 }

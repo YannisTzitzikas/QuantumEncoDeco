@@ -30,7 +30,7 @@ public class ComponentRemoverFilter extends AbstractFilter {
     public static final InputPort<Set<TripleComponent>> IN =
         new InputPort<>("components");
 
-    public static final OutputPort<Set<String>> OUT =
+    public static final OutputPort<Set<TripleComponent>> OUT =
         new OutputPort<>("remaining");
 
     private final StorageEngine storage;
@@ -59,26 +59,26 @@ public class ComponentRemoverFilter extends AbstractFilter {
             long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
             logger.info("StorageFilter processed empty batch: input=0, removed=0, remaining=0, durationMs={}", elapsedMs);
             
-            out.emit(OUT, Message.data(new HashSet<String>()));
+            out.emit(OUT, Message.data(new HashSet<TripleComponent>()));
             return;
         }
 
         // Collect keys and their byte[] form
-        List<String> values = new ArrayList<>(inputSet.size());
+        List<TripleComponent> components = new ArrayList<>(inputSet.size());
         List<byte[]> keys = new ArrayList<>(inputSet.size());
         for (TripleComponent tc : inputSet) {
             String val = tc.getValue();
-            values.add(val);
+            components.add(tc);
             keys.add(serializer.serialize(val));
         }
 
         // Bulk check existence
-        Set<String> remaining = new HashSet<>();
+        Set<TripleComponent> remaining = new HashSet<>();
         try {
             BitSet existsBits = storage.containsAll(keys);
-            for (int i = 0; i < values.size(); i++) {
+            for (int i = 0; i < components.size(); i++) {
                 if (!existsBits.get(i)) {
-                    remaining.add(values.get(i));
+                    remaining.add(components.get(i));
                 }
             }
         } catch (StorageException e) {
