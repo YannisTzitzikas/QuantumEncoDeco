@@ -9,7 +9,7 @@ import java.util.List;
 
 public final class NumberSequencePump extends AbstractPump {
 
-    public static final OutputPort<List<Integer>> OUT =
+    public static final OutputPort<List<Number>> OUT =
         new OutputPort<>("numbers");
 
     private int next;
@@ -33,7 +33,7 @@ public final class NumberSequencePump extends AbstractPump {
             return false;      // idle so loop can back off
         }
 
-        List<Integer> batch = new ArrayList<>(batchSize);
+        List<Number> batch = new ArrayList<>(batchSize);
         for (int i = 0; i < batchSize && next <= endInclusive; i++, next++) {
             batch.add(next);
         }

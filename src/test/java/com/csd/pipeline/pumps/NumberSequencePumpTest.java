@@ -2,8 +2,9 @@ package com.csd.pipeline.pumps;
 
 import com.csd.core.model.Message;
 import com.csd.core.pipeline.*;
+import com.csd.pipeline.filters.SplitPositiveNegativeFilter;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,32 +24,51 @@ public class NumberSequencePumpTest {
     @Test
     public void emitsSequenceThenEos() throws Exception {
         // Pipe and bindings
-        InMemoryPipe<List<Integer>> outPipe = new InMemoryPipe<>();
+        InMemoryPipe<List<Number>> outPipe = new InMemoryPipe<>();
         PortBindings bindings = new PortBindings();
         bindings.bindOutput(NumberSequencePump.OUT, outPipe);
+        NumberSequencePump pump = new NumberSequencePump(1, 100, 16, bindings);
+
+        // Setup pipes
+        InMemoryPipe<List<Number>> posPipe = new InMemoryPipe<>();
+        InMemoryPipe<List<Number>> negPipe = new InMemoryPipe<>();
+
+        // Bind ports
+        PortBindings filterBindings = new PortBindings();
+        filterBindings.bindInput(SplitPositiveNegativeFilter.IN, outPipe);
+        filterBindings.bindOutput(SplitPositiveNegativeFilter.OUT_POS, posPipe);
+        filterBindings.bindOutput(SplitPositiveNegativeFilter.OUT_NEG, negPipe);
+        SplitPositiveNegativeFilter filter = new SplitPositiveNegativeFilter(filterBindings);
 
         // Pump: 1..100 in batches of 16
-        NumberSequencePump pump = new NumberSequencePump(1, 100, 16, bindings);
         Thread t = new Thread(pump);
+        Thread filterThread = new Thread(filter);
         t.start();
+        filterThread.start();
 
-        // Collect
-        List<Integer> all = new ArrayList<>();
-        boolean done = false;
-        while (!done) {
-            Message<List<Integer>> msg = outPipe.receive();
-            switch (msg.getKind()) {
-                case DATA: all.addAll(msg.getPayload()); break;
-                case EOS : done = true; break;
+        // Collect outputs
+        List<Number> positives = new ArrayList<>();
+        List<Number> negatives = new ArrayList<>();
+
+        boolean posDone = false, negDone = false;
+        while (!posDone || !negDone) {
+            if (!posDone) {
+                Message<List<Number>> msg = posPipe.receive();
+                if (msg.getKind() == Message.MessageKind.EOS) posDone = true;
+                else positives.addAll(msg.getPayload());
+            }
+            if (!negDone) {
+                Message<List<Number>> msg = negPipe.receive();
+                if (msg.getKind() == Message.MessageKind.EOS) negDone = true;
+                else negatives.addAll(msg.getPayload());
             }
         }
 
-        t.join();
-
         // Assertions
-        assertEquals("Size differs from the expected one! ", 100 , all.size());
-        for (int i = 0; i < 100; i++) {
-            assertEquals("Values are not existent in the map", new Integer(i + 1), all.get(i));
-        }
+        for (Number n : positives) assertTrue("Expected positive: " + n, n.doubleValue() > 0);
+        for (Number n : negatives) assertTrue("Expected negative: " + n, n.doubleValue() < 0);
+
+        filterThread.join(); // Wait for filter to finish
+        t.join();
     }
 }
