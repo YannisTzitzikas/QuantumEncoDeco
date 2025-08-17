@@ -1,29 +1,36 @@
 package com.csd.storage;
 
-import org.rocksdb.RocksDBException;
-
 import com.csd.core.storage.StorageEngine;
+import com.csd.core.storage.StorageException;
+import com.csd.core.storage.StorageOptions;
+import com.csd.storage.mapper.RocksRuntimeMapper;
+import com.csd.storage.options.InMemoryOptions;
+import com.csd.storage.options.RocksOptions;
+import com.csd.storage.options.RocksRuntime;
 
-public class StorageEngineFactory {
+public final class StorageEngineFactory {
 
     private StorageEngineFactory() {/* Prevent instantiation */ }
 
-    /**
-     * Returns a new StorageEngine instance based on the backend name.
-     * Defaults to HashMapStorageEngine if name is unknown.
-     */
-    public static StorageEngine getStorageEngine(String backend, String storagePath) {
-        if (backend == null) return new HashMapStorageEngine();
-
-        switch (backend.trim().toLowerCase()) {
-            case "hashmap": return new HashMapStorageEngine();
-            case "rocksdb": try {
-                    return new RocksDBStorageEngine(storagePath);
-                } catch (RocksDBException e) {
-                    e.printStackTrace();
-                }
-            default:
-                return new HashMapStorageEngine(); // Default fallback
+    public static StorageEngine open(StorageOptions options) throws StorageException {
+        if (options instanceof InMemoryOptions) {
+            InMemoryOptions mem = (InMemoryOptions) options;
+            return new InMemoryStorageEngine(mem);
+        } else if (options instanceof RocksOptions ) {
+            RocksOptions ro = (RocksOptions) options;
+            RocksRuntime rt = RocksRuntimeMapper.toRuntime(ro);
+            return new RocksDBStorageEngine(rt);
+        } else {
+            throw new StorageException("Unsupported StorageOptions: " + options.getClass().getName(), new IllegalArgumentException());
         }
+    }
+
+    // Optional convenience
+    public static StorageEngine inMemory() throws StorageException {
+        return open(InMemoryOptions.builder().build());
+    }
+
+    public static StorageEngine rocks(String path) throws StorageException {
+        return open(RocksOptions.builder(path).build());
     }
 }

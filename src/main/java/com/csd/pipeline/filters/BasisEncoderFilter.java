@@ -11,12 +11,11 @@ import com.csd.core.pipeline.StreamPolicy;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class BasisEncoderFilter extends AbstractFilter {
 
-    public static final InputPort<List<TripleComponent>> IN =
+    public static final InputPort<Iterable<TripleComponent>> IN =
         new InputPort<>("components");
     public static final OutputPort<Map<String,Integer>> OUT =
         new OutputPort<>("basis-mapping");
@@ -29,7 +28,7 @@ public class BasisEncoderFilter extends AbstractFilter {
 
     @Override
     protected void process(Batch in, Emitter out) throws Exception {
-        Message<List<TripleComponent>> msg = in.pop(IN);
+        Message<Iterable<TripleComponent>> msg = in.pop(IN);
         if (msg.getKind() == Message.MessageKind.EOS) {
             out.emit(OUT, Message.eos());
             return;
@@ -38,7 +37,7 @@ public class BasisEncoderFilter extends AbstractFilter {
         Map<String, Integer> map = new HashMap<>();
 
         for (TripleComponent component : msg.getPayload()) {
-            map.putIfAbsent(component.toString(), count);
+            map.putIfAbsent(component.getValue(), count);
         }
 
         out.emit(OUT, Message.data(map));

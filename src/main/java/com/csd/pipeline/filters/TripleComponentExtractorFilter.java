@@ -10,15 +10,16 @@ import com.csd.core.pipeline.OutputPort;
 import com.csd.core.pipeline.PortBindings;
 import com.csd.core.pipeline.StreamPolicy;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TripleComponentExtractorFilter extends AbstractFilter {
 
     public static final InputPort<List<URITriple>> IN =
         new InputPort<>("triples");
-    public static final OutputPort<List<TripleComponent>> OUT =
+    public static final OutputPort<Set<TripleComponent>> OUT =
         new OutputPort<>("components");
 
 
@@ -34,7 +35,7 @@ public class TripleComponentExtractorFilter extends AbstractFilter {
             return;
         }
 
-        List<TripleComponent> components = new ArrayList<>();
+        Set<TripleComponent> components = new HashSet<>();
         for (URITriple t : msg.getPayload()) {
             components.add(t.getPredicate());
             components.add(t.getSubject());

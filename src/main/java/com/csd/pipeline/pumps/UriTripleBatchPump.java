@@ -71,7 +71,7 @@ public final class UriTripleBatchPump extends AbstractPump {
 
             try (URIStreamer streamer = URIStreamerFactory.getReader(file.toString())) {
                 Consumer<URITriple> sink = triple -> acceptTriple(triple, out);
-                streamer.stream(file.toString(), sink); // adapt to your URIStreamer API
+                streamer.stream(file.toString(), sink); 
             }
 
             long fileEnd = System.nanoTime();

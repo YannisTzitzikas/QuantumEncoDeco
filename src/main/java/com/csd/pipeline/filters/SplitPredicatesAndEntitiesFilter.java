@@ -14,7 +14,7 @@ import java.util.List;
 
 public final class SplitPredicatesAndEntitiesFilter extends AbstractFilter {
     
-    public static final InputPort<List<TripleComponent>> IN =
+    public static final InputPort<Iterable<TripleComponent>> IN =
         new InputPort<>("components");
     public static final OutputPort<List<TripleComponent>> OUT_PREDICATES =
         new OutputPort<>("predicates");
@@ -27,7 +27,7 @@ public final class SplitPredicatesAndEntitiesFilter extends AbstractFilter {
 
     @Override
     protected void process(Batch in, Emitter out) throws Exception {
-        Message<List<TripleComponent>> msg = in.pop(IN);
+        Message<Iterable<TripleComponent>> msg = in.pop(IN);
         if (msg.getKind() == Message.MessageKind.EOS) {
             out.emit(OUT_PREDICATES, Message.eos());
             out.emit(OUT_ENTITIES, Message.eos());
