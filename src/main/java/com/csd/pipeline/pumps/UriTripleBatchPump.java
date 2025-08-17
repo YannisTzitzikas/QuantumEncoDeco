@@ -75,7 +75,10 @@ public final class UriTripleBatchPump extends AbstractPump {
             }
 
             long fileEnd = System.nanoTime();
-            log.info("Completed file: {} ({} ms)", file, (fileEnd - fileStart) / 1_000_000);
+            long fileDuration = fileEnd - fileStart;
+
+            log.info("Completed file: {} ({} ms)",
+                file, fileDuration / 1_000_000);
 
             if (flushOnFileBoundary && !batch.isEmpty()) {
                 emitBatch(out);

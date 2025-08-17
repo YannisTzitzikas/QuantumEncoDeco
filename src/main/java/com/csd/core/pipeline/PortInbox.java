@@ -15,6 +15,10 @@ public final class PortInbox {
 
     public Map<String, Deque<Message<?>>> buffers() { return buffers; }
 
+    public boolean allInputsEOSHead() {
+        return buffers.values().stream().allMatch(q -> !q.isEmpty() && q.peek().getKind() == Message.MessageKind.EOS);
+    }
+
     public boolean allInputsEOS() {
         return buffers.values().stream().allMatch(q -> !q.isEmpty() && q.peekLast().getKind() == Message.MessageKind.EOS);
     }

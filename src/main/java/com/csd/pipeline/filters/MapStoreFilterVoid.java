@@ -25,15 +25,19 @@ public class MapStoreFilterVoid extends AbstractFilter {
     public static final InputPort<Map<String, Integer>> IN =
         new InputPort<>("entries");
 
-    public static final OutputPort<Void> OUT =
-        new OutputPort<>("done");
+    public static final OutputPort<Void> OUT_MAP =
+        new OutputPort<>("map");
+
+    public static final OutputPort<Void> OUT_ENCODE =
+        new OutputPort<>("encode");
+
 
     private final StorageEngine storage;
     private final StringSerializer  stringSer  = new StringSerializer();
     private final IntegerSerializer intSer     = new IntegerSerializer();
 
     public MapStoreFilterVoid(PortBindings bindings, StorageEngine storage) {
-        super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy());
+        super(Arrays.asList(IN), Arrays.asList(OUT_MAP, OUT_ENCODE), bindings, new StreamPolicy());
         if (storage == null) throw new IllegalArgumentException("StorageEngine cannot be null");
         this.storage = storage;
     }
@@ -43,19 +47,14 @@ public class MapStoreFilterVoid extends AbstractFilter {
         final long start = System.nanoTime();
         Message<Map<String, Integer>> msg = in.pop(IN);
 
-        if (msg.getKind() == Message.MessageKind.EOS) {
-            logger.debug("MapStoreFilterVoid received EOS; forwarding.");
-            out.emit(OUT, Message.eos());
-            return;
-        }
-
         Map<String, Integer> payload = msg.getPayload();
         int inputCount = (payload == null) ? 0 : payload.size();
 
         if (payload == null || payload.isEmpty()) {
             long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
             logger.info("MapStoreFilterVoid empty batch: input=0, inserted=0, durationMs={}", elapsed);
-            out.emit(OUT, Message.data(null));
+            out.emit(OUT_MAP, Message.data(null));
+            out.emit(OUT_ENCODE, Message.data(null));
             return;
         }
 
@@ -81,6 +80,7 @@ public class MapStoreFilterVoid extends AbstractFilter {
         logger.info("MapStoreFilterVoid processed batch: input={}, inserted={}, durationMs={}",
                 inputCount, inserted, elapsed);
 
-        out.emit(OUT, Message.data(null));
+        out.emit(OUT_MAP, Message.data(null));
+        out.emit(OUT_ENCODE, Message.data(null));
     }
 }
