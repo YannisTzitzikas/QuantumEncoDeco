@@ -21,9 +21,10 @@ import com.csd.core.model.Message;
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.model.uri.URITriple;
 import com.csd.core.pipeline.Pipe;
-import com.csd.core.pipeline.PipelineMetrics;
 import com.csd.core.pipeline.PortBindings;
 import com.csd.core.storage.StorageEngine;
+import com.csd.metrics.PipelineMetrics;
+import com.csd.metrics.writers.PipelineMetricsWriter;
 import com.csd.pipeline.filters.BasisEncoderFilter;
 import com.csd.pipeline.filters.ComponentRemoverFilter;
 import com.csd.pipeline.filters.MapStoreFilterVoid;
@@ -155,6 +156,7 @@ public class R1ConfigurationTest {
         }
 
         // Print the metrics one finale time.
-        LOGGER.info("Final metrics are: {}",metrics.getAllMetrics());
+        PipelineMetricsWriter writer = new PipelineMetricsWriter();
+        writer.writeAllMetrics(metrics);
     }
 }

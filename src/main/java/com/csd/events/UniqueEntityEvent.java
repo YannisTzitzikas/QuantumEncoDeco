@@ -1,3 +1,3 @@
-package com.csd.pipeline.events;
+package com.csd.events;
 
 public class UniqueEntityEvent extends UniqueComponentEvent {}

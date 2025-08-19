@@ -1,4 +1,4 @@
-package com.csd.core.pipeline;
+package com.csd.metrics;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

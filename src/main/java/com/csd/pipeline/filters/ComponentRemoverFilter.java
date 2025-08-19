@@ -12,8 +12,8 @@ import com.csd.core.pipeline.PortBindings;
 import com.csd.core.pipeline.StreamPolicy;
 import com.csd.core.storage.StorageEngine;
 import com.csd.core.storage.StorageException;
-import com.csd.pipeline.events.UniqueEntityEvent;
-import com.csd.pipeline.events.UniquePredicateEvent;
+import com.csd.events.UniqueEntityEvent;
+import com.csd.events.UniquePredicateEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;

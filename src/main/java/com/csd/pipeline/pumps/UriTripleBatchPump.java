@@ -14,6 +14,10 @@ import com.csd.core.io.URIStreamer;
 import com.csd.core.pipeline.AbstractPump;
 import com.csd.core.pipeline.OutputPort;
 import com.csd.core.pipeline.PortBindings;
+import com.csd.events.BatchProcessedEvent;
+import com.csd.events.FileProcessingCompletedEvent;
+import com.csd.events.FileProcessingStartedEvent;
+import com.csd.events.TripleProcessedEvent;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.URITriple;
 
@@ -68,10 +72,12 @@ public final class UriTripleBatchPump extends AbstractPump {
             logger.info("Processing file: {}", file);
 
             // [STATS] Mark current file for stats
+            eventBus.get().publish(new FileProcessingStartedEvent(file.toString()));
 
             try (URIStreamer streamer = URIStreamerFactory.getReader(file.toString())) {
                 Consumer<URITriple> sink = triple -> {
                     // [STATS] Count triple + components
+                    eventBus.get().publish(new TripleProcessedEvent());
                     acceptTriple(triple, out);
                 };
                 streamer.stream(file.toString(), sink);
@@ -79,9 +85,9 @@ public final class UriTripleBatchPump extends AbstractPump {
 
             long fileEnd = System.nanoTime();
             long fileDuration = fileEnd - fileStart;
+            eventBus.get().publish(new FileProcessingCompletedEvent(file.toString(), fileDuration));
 
             logger.info("File processed in {} ns", fileDuration);
-            // [STATS] Close file stats and record timing
 
             if (flushOnFileBoundary && !batch.isEmpty()) {
                 emitBatch(out);
@@ -118,6 +124,7 @@ public final class UriTripleBatchPump extends AbstractPump {
             long now = System.nanoTime();
             long elapsedSinceLast = (now - lastEmitTime) / 1_000_000;
             lastEmitTime = now;
+            eventBus.get().publish(new BatchProcessedEvent(batchSize, elapsedSinceLast));
 
             logger.info("Emitted batch #{} with {} triples ({} ms since last batch)",
                     batchCounter, snapshot.size(), elapsedSinceLast);

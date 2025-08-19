@@ -1,4 +1,4 @@
-package com.csd.pipeline.events;
+package com.csd.events;
 
 import com.csd.core.event.Event;
 

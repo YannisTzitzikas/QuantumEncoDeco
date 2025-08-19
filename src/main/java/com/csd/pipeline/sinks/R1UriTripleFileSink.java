@@ -11,9 +11,9 @@ import com.csd.core.pipeline.InputPort;
 import com.csd.core.pipeline.PortBindings;
 import com.csd.core.storage.StorageEngine;
 import com.csd.core.storage.StorageException;
+import com.csd.events.UniqueEntityEvent;
+import com.csd.events.UniquePredicateEvent;
 import com.csd.io.URIStreamerFactory;
-import com.csd.pipeline.events.UniqueEntityEvent;
-import com.csd.pipeline.events.UniquePredicateEvent;
 import com.csd.core.event.EventBus;
 import com.csd.core.io.URIStreamer;
 

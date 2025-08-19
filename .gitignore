@@ -35,4 +35,3 @@ replay_pid*
 # misc files and dirs
 logs/
 results/
-temp*/
