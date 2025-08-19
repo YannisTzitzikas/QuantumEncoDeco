@@ -12,6 +12,7 @@ import com.csd.core.pipeline.PortBindings;
 import com.csd.core.pipeline.StreamPolicy;
 import com.csd.core.storage.StorageEngine;
 import com.csd.core.storage.StorageException;
+import com.csd.events.RecordBatchEvent;
 import com.csd.events.UniqueEntityEvent;
 import com.csd.events.UniquePredicateEvent;
 
@@ -109,6 +110,7 @@ public class ComponentRemoverFilter extends AbstractFilter {
         logger.info("StorageFilter processed batch: input={}, removed={}, remaining={}",
                 inputCount, removedCount, remainingCount);
 
+        eventBus.get().publish(new RecordBatchEvent());
         // Emit remaining values
         out.emit(OUT, Message.data(remaining));
     }

@@ -23,8 +23,12 @@ import com.csd.core.model.uri.URITriple;
 import com.csd.core.pipeline.Pipe;
 import com.csd.core.pipeline.PortBindings;
 import com.csd.core.storage.StorageEngine;
+import com.csd.metrics.FileMetrics;
 import com.csd.metrics.PipelineMetrics;
+import com.csd.metrics.UriTripleMetricsWithCSV;
+import com.csd.metrics.writers.FileMetricsWriter;
 import com.csd.metrics.writers.PipelineMetricsWriter;
+import com.csd.metrics.writers.UriTripleMetricsWriter;
 import com.csd.pipeline.filters.BasisEncoderFilter;
 import com.csd.pipeline.filters.ComponentRemoverFilter;
 import com.csd.pipeline.filters.MapStoreFilterVoid;
@@ -62,15 +66,15 @@ public class R1ConfigurationTest {
     
     @Test
     public void testR1ConfigurationSmall() throws Exception {
-        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\test\\test2"), Paths.get("small_test.r1"), "small_test.r1.map");
+        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\test\\test2"), Paths.get("resluts\\small_test.r1"), "resluts\\small_test.r1.map");
     }
 
     public void testR1ConfigurationMid() throws Exception {
-        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\newtest"), Paths.get("mid_test.r1"), "mid_test.r1.map");
+        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\newtest"), Paths.get("resluts\\mid_test.r1"), "resluts\\mid_test.r1.map");
     }
 
     public void testR1ConfigurationBig() throws Exception {
-        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest"), Paths.get("big_test.r1"), "big_test.r1.map");
+        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest"), Paths.get("resluts\\big_test.r1"), "resluts\\big_test.r1.map");
     }
 
 
@@ -91,6 +95,8 @@ public class R1ConfigurationTest {
         InMemoryPipe<Void> pipe6 = new InMemoryPipe<>();
 
         PipelineMetrics metrics = new PipelineMetrics(bus);
+        UriTripleMetricsWithCSV csvMetrics = new UriTripleMetricsWithCSV(bus, mapFileName + "uri.csv");
+        FileMetrics fileMetrics = new FileMetrics(bus);
 
         // Create storage and pre-seed with "existing"
         StorageEngine storage = StorageEngineFactory.inMemory();
@@ -158,5 +164,11 @@ public class R1ConfigurationTest {
         // Print the metrics one finale time.
         PipelineMetricsWriter writer = new PipelineMetricsWriter();
         writer.writeAllMetrics(metrics);
+
+        FileMetricsWriter wf = new FileMetricsWriter();
+        wf.writeAllMetrics(fileMetrics);
+
+        UriTripleMetricsWriter wt = new UriTripleMetricsWriter();
+        wt.writeMetrics(csvMetrics);
     }
 }

@@ -8,9 +8,10 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import com.csd.core.event.EventBus;
-import com.csd.events.BatchProcessedEvent;
+import com.csd.events.RecordBatchEvent;
 
 public class UriTripleMetricsWithCSV extends UriTripleMetrics {
     private final BufferedWriter csvWriter;
@@ -31,17 +32,17 @@ public class UriTripleMetricsWithCSV extends UriTripleMetrics {
                                                   .withZone(ZoneId.systemDefault());
         
         // Write CSV header
-        csvWriter.write("timestamp,total_triples,total_entities,total_predicates,unique_entities,unique_predicates,unique_components,total_components,entity_uniqueness_ratio,predicate_uniqueness_ratio\n");
+        csvWriter.write("timestamp,total_triples,total_entities,total_predicates,unique_entities,unique_predicates,unique_components,total_components,entity_uniqueness_ratio,predicate_uniqueness_ratio,component_uniqueness_ratio\n");
         csvWriter.flush();
         
         // Subscribe to BatchProcessedEvent
-        eventBus.subscribe(BatchProcessedEvent.class, this::handleBatchProcessed);
+        eventBus.subscribe(RecordBatchEvent.class, this::handleBatchProcessed);
     }
     
-    private void handleBatchProcessed(BatchProcessedEvent event) {
+    private void handleBatchProcessed(RecordBatchEvent event) {
         try {
             String timestamp = timestampFormatter.format(Instant.now());
-            String line = String.format("%s,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
+            String line = String.format(Locale.US ,"%s,%d,%d,%d,%d,%d,%d,%d,%.2f,%.2f,%.2f\n",
                     timestamp,
                     getTotalTriplesProcessed(),
                     getTotalEntitiesProcessed(),

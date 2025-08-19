@@ -17,7 +17,6 @@ import com.csd.core.pipeline.PortBindings;
 import com.csd.events.BatchProcessedEvent;
 import com.csd.events.FileProcessingCompletedEvent;
 import com.csd.events.FileProcessingStartedEvent;
-import com.csd.events.TripleProcessedEvent;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.URITriple;
 
@@ -76,8 +75,6 @@ public final class UriTripleBatchPump extends AbstractPump {
 
             try (URIStreamer streamer = URIStreamerFactory.getReader(file.toString())) {
                 Consumer<URITriple> sink = triple -> {
-                    // [STATS] Count triple + components
-                    eventBus.get().publish(new TripleProcessedEvent());
                     acceptTriple(triple, out);
                 };
                 streamer.stream(file.toString(), sink);

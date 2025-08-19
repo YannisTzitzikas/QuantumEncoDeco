@@ -3,7 +3,7 @@ package com.csd.metrics;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.csd.core.event.EventBus;
-import com.csd.events.TripleProcessedEvent;
+import com.csd.events.BatchProcessedEvent;
 import com.csd.events.UniqueEntityEvent;
 import com.csd.events.UniquePredicateEvent;
 
@@ -21,7 +21,12 @@ public class UriTripleMetrics {
     }
     
     private void registerEventHandlers(EventBus eventBus) {
-        eventBus.subscribe(TripleProcessedEvent.class, e -> {totalTriplesProcessed.incrementAndGet(); totalEntitiesProcessed.addAndGet(2); totalPredicatesProcessed.addAndGet(1); });
+        eventBus.subscribe(BatchProcessedEvent.class, e -> { 
+            long delta = e.getBatchSize();
+            totalTriplesProcessed.addAndGet(delta);
+            totalEntitiesProcessed.addAndGet(2*delta);
+            totalPredicatesProcessed.addAndGet(delta);
+        });
         eventBus.subscribe(UniqueEntityEvent.class, e -> uniqueEntitiesCount.getAndIncrement());
         eventBus.subscribe(UniquePredicateEvent.class, e -> uniquePredicatesCount.getAndIncrement());
     }
