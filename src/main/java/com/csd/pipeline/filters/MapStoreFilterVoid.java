@@ -2,6 +2,7 @@ package com.csd.pipeline.filters;
 
 import com.csd.common.utils.serializer.IntegerSerializer;
 import com.csd.common.utils.serializer.StringSerializer;
+import com.csd.core.event.EventBus;
 import com.csd.core.model.Message;
 import com.csd.core.pipeline.AbstractFilter;
 import com.csd.core.pipeline.InputPort;
@@ -36,8 +37,8 @@ public class MapStoreFilterVoid extends AbstractFilter {
     private final StringSerializer  stringSer  = new StringSerializer();
     private final IntegerSerializer intSer     = new IntegerSerializer();
 
-    public MapStoreFilterVoid(PortBindings bindings, StorageEngine storage) {
-        super(Arrays.asList(IN), Arrays.asList(OUT_MAP, OUT_ENCODE), bindings, new StreamPolicy());
+    public MapStoreFilterVoid(PortBindings bindings, StorageEngine storage, EventBus bus) {
+        super(Arrays.asList(IN), Arrays.asList(OUT_MAP, OUT_ENCODE), bindings, new StreamPolicy(), bus);
         if (storage == null) throw new IllegalArgumentException("StorageEngine cannot be null");
         this.storage = storage;
     }

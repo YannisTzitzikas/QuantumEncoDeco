@@ -1,8 +1,8 @@
 package com.csd.pipeline.filters;
 
-import com.csd.common.metrics.StatisticsCollector;
 import com.csd.common.utils.serializer.Serializer;
 import com.csd.common.utils.serializer.StringSerializer;
+import com.csd.core.event.EventBus;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.pipeline.AbstractFilter;
@@ -12,6 +12,8 @@ import com.csd.core.pipeline.PortBindings;
 import com.csd.core.pipeline.StreamPolicy;
 import com.csd.core.storage.StorageEngine;
 import com.csd.core.storage.StorageException;
+import com.csd.pipeline.events.UniqueEntityEvent;
+import com.csd.pipeline.events.UniquePredicateEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +21,6 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -38,18 +39,15 @@ public class ComponentRemoverFilter extends AbstractFilter {
     private final StorageEngine storage;
     private final Serializer<String> serializer;
 
-    private final Optional<StatisticsCollector> stats;
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
 
-    public ComponentRemoverFilter(PortBindings bindings, StorageEngine storage) {
-        this(bindings,storage,null);
-    }   
-
-
-    public ComponentRemoverFilter(PortBindings bindings, StorageEngine storage, StatisticsCollector stats ) {
-        super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy());
+    public ComponentRemoverFilter(PortBindings bindings, StorageEngine storage, EventBus bus) {
+        super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy(), bus);
         this.storage = Objects.requireNonNull(storage, "storage");
         this.serializer = new StringSerializer();
-        this.stats = Optional.ofNullable(stats);
     }   
 
     @Override
@@ -88,10 +86,13 @@ public class ComponentRemoverFilter extends AbstractFilter {
             BitSet existsBits = storage.containsAll(keys);
             for (int i = 0; i < components.size(); i++) {
                 if (!existsBits.get(i)) {
-                    remaining.add(components.get(i));
-                    if(stats.isPresent())
-                        if(components.get(i).getRole() == TripleComponent.Role.PREDICATE) stats.get().recordUniquePredicate();
-                        else stats.get().recordUniqueEntity();
+                    TripleComponent c = components.get(i);
+                    remaining.add(c);
+
+                    switch (c.getRole()) {
+                        case PREDICATE: eventBus.get().publish(new UniquePredicateEvent()); break;
+                        default:        eventBus.get().publish(new UniqueEntityEvent());
+                    }
                 }
             }
         } catch (StorageException e) {
@@ -104,10 +105,9 @@ public class ComponentRemoverFilter extends AbstractFilter {
         int inputCount = inputSet.size();
         int remainingCount = remaining.size();
         int removedCount = inputCount - remainingCount;
-        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
 
-        logger.info("StorageFilter processed batch: input={}, removed={}, remaining={}, durationMs={}",
-                inputCount, removedCount, remainingCount, elapsedMs);
+        logger.info("StorageFilter processed batch: input={}, removed={}, remaining={}",
+                inputCount, removedCount, remainingCount);
 
         // Emit remaining values
         out.emit(OUT, Message.data(remaining));

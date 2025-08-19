@@ -1,5 +1,6 @@
 package com.csd.pipeline.filters;
 
+import com.csd.core.event.EventBus;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.model.uri.URITriple;
@@ -23,8 +24,8 @@ public class TripleComponentExtractorFilter extends AbstractFilter {
         new OutputPort<>("components");
 
 
-    public TripleComponentExtractorFilter(PortBindings bindings) {
-        super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy());
+    public TripleComponentExtractorFilter(PortBindings bindings, EventBus bus) {
+        super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy(), bus);
     }
 
     @Override

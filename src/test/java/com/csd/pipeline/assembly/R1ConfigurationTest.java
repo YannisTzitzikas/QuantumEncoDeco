@@ -1,21 +1,27 @@
 package com.csd.pipeline.assembly;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 
-import com.csd.common.metrics.StatisticsCollector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.csd.core.event.AsyncEventBus;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.model.uri.URITriple;
 import com.csd.core.pipeline.Pipe;
+import com.csd.core.pipeline.PipelineMetrics;
 import com.csd.core.pipeline.PortBindings;
 import com.csd.core.storage.StorageEngine;
 import com.csd.pipeline.filters.BasisEncoderFilter;
@@ -24,10 +30,13 @@ import com.csd.pipeline.filters.MapStoreFilterVoid;
 import com.csd.pipeline.filters.TripleComponentExtractorFilter;
 import com.csd.pipeline.pumps.UriTripleBatchPump;
 import com.csd.pipeline.sinks.StorageExportSink;
-import com.csd.pipeline.sinks.UriTripleFileSink;
+import com.csd.pipeline.sinks.R1UriTripleFileSink;
 import com.csd.storage.StorageEngineFactory;
 
 public class R1ConfigurationTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(R1ConfigurationTest.class);
+
     static class InMemoryPipe<T> implements Pipe<T> {
         private final BlockingQueue<Message<T>> q;
 
@@ -49,14 +58,29 @@ public class R1ConfigurationTest {
             return q.take();
         }
     }
-
+    
     @Test
-    public void testR1Configuration() throws Exception {
-        // Create test data directory and file
-        Path tempDir = Files.createTempDirectory("temp");
-        Path testPath = Paths.get("C:\\Users\\User\\Downloads\\CIDOC_CRM_v7.1.1.rdfs.xml");
+    public void testR1ConfigurationSmall() throws Exception {
+        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\test\\test2"), Paths.get("small_test.r1"), "small_test.r1.map");
+    }
 
-        StatisticsCollector stats = new StatisticsCollector();
+    public void testR1ConfigurationMid() throws Exception {
+        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\newtest"), Paths.get("mid_test.r1"), "mid_test.r1.map");
+    }
+
+    public void testR1ConfigurationBig() throws Exception {
+        testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest"), Paths.get("big_test.r1"), "big_test.r1.map");
+    }
+
+
+    private void testR1Configuration(Path testPath, Path output, String mapFileName) throws Exception {
+        // Create test data directory and file
+        // Create executor for event bus and pipeline components
+        ExecutorService componentExecutor = Executors.newFixedThreadPool(10); 
+        ExecutorService eventExecutor = Executors.newCachedThreadPool();
+
+        AsyncEventBus bus = new AsyncEventBus(eventExecutor);
+        
         // Setup pipes
         InMemoryPipe<List<URITriple>> pipe1 = new InMemoryPipe<>();
         InMemoryPipe<Set<TripleComponent>> pipe2 = new InMemoryPipe<>();
@@ -65,8 +89,10 @@ public class R1ConfigurationTest {
         InMemoryPipe<Void> pipe5 = new InMemoryPipe<>();
         InMemoryPipe<Void> pipe6 = new InMemoryPipe<>();
 
+        PipelineMetrics metrics = new PipelineMetrics(bus);
+
         // Create storage and pre-seed with "existing"
-        StorageEngine storage = StorageEngineFactory.rocks(tempDir.toString());
+        StorageEngine storage = StorageEngineFactory.inMemory();
 
         // Bind ports for all components
         PortBindings pumpBindings = new PortBindings();
@@ -93,50 +119,42 @@ public class R1ConfigurationTest {
         sinkBindings.bindInput(StorageExportSink.IN, pipe5);
 
         PortBindings encodeBindings = new PortBindings();
-        encodeBindings.bindInput(UriTripleFileSink.IN, pipe6);
+        encodeBindings.bindInput(R1UriTripleFileSink.IN, pipe6);
 
         // Create components
         UriTripleBatchPump pump = new UriTripleBatchPump(
                 testPath,
                 "*.ttl",
-                1000,
-                pumpBindings, stats);
+                25_000,
+                pumpBindings,
+                bus);
 
-        TripleComponentExtractorFilter extractor = new TripleComponentExtractorFilter(extractorBindings);
-        ComponentRemoverFilter remover = new ComponentRemoverFilter(removerBindings, storage, stats);
-        BasisEncoderFilter basis = new BasisEncoderFilter(basisBindings);
-        MapStoreFilterVoid store = new MapStoreFilterVoid(storeBindings, storage);
-        StorageExportSink sink = new StorageExportSink(sinkBindings, storage);
-        UriTripleFileSink sink2 = new UriTripleFileSink( testPath,"*.ttl",encodeBindings,storage, stats,Paths.get("r1Encoded.r1"));
+        TripleComponentExtractorFilter extractor = new TripleComponentExtractorFilter(extractorBindings, bus);
+        ComponentRemoverFilter remover = new ComponentRemoverFilter(removerBindings, storage, bus);
+        BasisEncoderFilter basis = new BasisEncoderFilter(basisBindings, bus);
+        MapStoreFilterVoid store = new MapStoreFilterVoid(storeBindings, storage, bus);
+        StorageExportSink sink = new StorageExportSink(sinkBindings, storage, mapFileName ,bus);
+        R1UriTripleFileSink sink2 = new R1UriTripleFileSink( testPath,"*.ttl",encodeBindings,storage,output, bus);
 
         // Run pipeline components in threads
-        Thread pumpThread = new Thread(pump);
-        Thread extractorThread = new Thread(extractor);
-        Thread removerThread = new Thread(remover);
-        Thread basisThread = new Thread(basis);
-        Thread storeThread = new Thread(store);
-        Thread sinkThread = new Thread(sink);
-        Thread sink2Thread = new Thread(sink2);
+        componentExecutor.submit(pump);
+        componentExecutor.submit(extractor);
+        componentExecutor.submit(remover);
+        componentExecutor.submit(basis);
+        componentExecutor.submit(store);
+        componentExecutor.submit(sink);
+        componentExecutor.submit(sink2);
 
-        pumpThread.start();
-        extractorThread.start();
-        removerThread.start();
-        basisThread.start();
-        storeThread.start();
-        sinkThread.start();
-        sink2Thread.start();
+        // Shutdown executor and wait for completion
+        componentExecutor.shutdown();
+        boolean finished = componentExecutor.awaitTermination(1, TimeUnit.HOURS);
+        
+        if (!finished) {
+            LOGGER.error("Pipeline did not complete within timeout");
+            componentExecutor.shutdownNow();
+        }
 
-        // Wait for EOS to propagate
-        System.out.println(stats);
-
-        pumpThread.join();
-        extractorThread.join();
-        removerThread.join();
-        basisThread.join();
-        storeThread.join();
-        sinkThread.join();
-        sink2Thread.join();
-
-        System.out.println(stats);
+        // Print the metrics one finale time.
+        LOGGER.info("Final metrics are: {}",metrics.getAllMetrics());
     }
 }

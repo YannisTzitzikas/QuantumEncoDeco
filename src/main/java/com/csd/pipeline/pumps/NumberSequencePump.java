@@ -1,5 +1,6 @@
 package com.csd.pipeline.pumps;
 
+import com.csd.core.event.EventBus;
 import com.csd.core.model.Message;
 import com.csd.core.pipeline.*;
 
@@ -19,8 +20,9 @@ public final class NumberSequencePump extends AbstractPump {
     public NumberSequencePump(int startInclusive,
                               int endInclusive,
                               int batchSize,
-                              PortBindings bindings) {
-        super(Arrays.asList(OUT), bindings, 0); // 0ms -> yield when idle
+                              PortBindings bindings,
+                              EventBus bus) {
+        super(Arrays.asList(OUT), bindings, 0, bus); // 0ms -> yield when idle
         this.next = startInclusive;
         this.endInclusive = endInclusive;
         this.batchSize = Math.max(1, batchSize);
@@ -29,7 +31,7 @@ public final class NumberSequencePump extends AbstractPump {
     @Override
     protected boolean step(Emitter out) throws Exception {
         if (next > endInclusive) {
-            stop();            // done -> trigger EOS in loop exit
+            onStop();            // done -> trigger EOS in loop exit
             return false;      // idle so loop can back off
         }
 

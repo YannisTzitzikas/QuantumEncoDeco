@@ -1,5 +1,6 @@
 package com.csd.pipeline.filters;
 
+import com.csd.core.event.EventBus;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.pipeline.AbstractFilter;
@@ -24,8 +25,8 @@ public class BasisEncoderFilter extends AbstractFilter {
 
     AtomicInteger count = new AtomicInteger(0);
 
-    public BasisEncoderFilter(PortBindings bindings) {
-        super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy());
+    public BasisEncoderFilter(PortBindings bindings, EventBus bus) {
+        super(Arrays.asList(IN), Arrays.asList(OUT), bindings, new StreamPolicy(), bus);
     }
 
     @Override

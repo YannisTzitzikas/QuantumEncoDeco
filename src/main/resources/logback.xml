@@ -2,12 +2,32 @@
 
   <!-- Create logs directory if needed -->
   <property name="LOG_DIR" value="logs"/>
+ 
+  <property name="RUN_ID" value="${run.id:-${current.timestamp}}"/>
+  <timestamp key="current.timestamp" datePattern="yyyyMMdd-HHmmss"/>
+  
+  <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_DIR}/debug.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_DIR}/debug.%d{yyyyMMdd-HHmmss}.log</fileNamePattern>
+      <maxHistory>10</maxHistory>
+    </rollingPolicy>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>DEBUG</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <encoder>
+      <pattern>%d %-5level [%thread] %logger - %msg%n</pattern>
+    </encoder>
+  </appender>
 
   <!-- Rolling appender for Jena logs -->
   <appender name="JENA_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_DIR}/jena.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_DIR}/jena.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>${LOG_DIR}/jena.%d{yyyyMMdd-HHmmss}.log</fileNamePattern>
+      <maxHistory>10</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%d %-5level [%thread] %logger - %msg%n</pattern>
@@ -18,7 +38,8 @@
   <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_DIR}/error.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_DIR}/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>${LOG_DIR}/error.%d{yyyyMMdd-HHmmss}.log</fileNamePattern>
+      <maxHistory>10</maxHistory>
     </rollingPolicy>
     <filter class="ch.qos.logback.classic.filter.LevelFilter">
       <level>ERROR</level>
@@ -34,7 +55,8 @@
   <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_DIR}/warn.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_DIR}/warn.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>${LOG_DIR}/warn.%d{yyyyMMdd-HHmmss}.log</fileNamePattern>
+      <maxHistory>10</maxHistory>
     </rollingPolicy>
     <filter class="ch.qos.logback.classic.filter.LevelFilter">
       <level>WARN</level>
@@ -50,7 +72,8 @@
   <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${LOG_DIR}/info.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${LOG_DIR}/info.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <fileNamePattern>${LOG_DIR}/info.%d{yyyyMMdd-HHmmss}.log</fileNamePattern>
+      <maxHistory>10</maxHistory>
     </rollingPolicy>
     <filter class="ch.qos.logback.classic.filter.LevelFilter">
       <level>INFO</level>
@@ -74,9 +97,11 @@
     <appender-ref ref="JENA_FILE"/>
   </logger>
 
+
   <!-- Root logger sends logs to all level-based files and console -->
   <root level="ALL">
-    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="CONSOL"/>
+    <appender-ref ref="DEBUG_FILE"/>
     <appender-ref ref="ERROR_FILE"/>
     <appender-ref ref="WARN_FILE"/>
     <appender-ref ref="INFO_FILE"/>

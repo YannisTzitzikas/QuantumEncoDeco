@@ -1,5 +1,6 @@
 package com.csd.pipeline.filters;
 
+import com.csd.core.event.EventBus;
 import com.csd.core.model.Message;
 import com.csd.core.pipeline.AbstractFilter;
 import com.csd.core.pipeline.InputPort;
@@ -20,8 +21,8 @@ public class MapMerger extends AbstractFilter {
     public static final OutputPort<Map<String, Integer>> OUT =
         new OutputPort<>("merged");
 
-    protected MapMerger(PortBindings bindings) {
-        super(Arrays.asList(IN_FIRST, IN_SECOND), Arrays.asList(OUT), bindings, new JoinPolicy());
+    protected MapMerger(PortBindings bindings, EventBus bus) {
+        super(Arrays.asList(IN_FIRST, IN_SECOND), Arrays.asList(OUT), bindings, new JoinPolicy(), bus);
     }
 
     @Override

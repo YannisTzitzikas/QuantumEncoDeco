@@ -1,5 +1,6 @@
 package com.csd.pipeline.filters;
 
+import com.csd.core.event.EventBus;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.pipeline.AbstractFilter;
@@ -21,8 +22,8 @@ public final class SplitPredicatesAndEntitiesFilter extends AbstractFilter {
     public static final OutputPort<List<TripleComponent>> OUT_ENTITIES   = 
         new OutputPort<>("entities");
 
-    public SplitPredicatesAndEntitiesFilter(PortBindings bindings) {
-        super(Arrays.asList(IN), Arrays.asList(OUT_PREDICATES, OUT_ENTITIES), bindings, new StreamPolicy());
+    public SplitPredicatesAndEntitiesFilter(PortBindings bindings, EventBus bus) {
+        super(Arrays.asList(IN), Arrays.asList(OUT_PREDICATES, OUT_ENTITIES), bindings, new StreamPolicy(), bus);
     }
 
     @Override

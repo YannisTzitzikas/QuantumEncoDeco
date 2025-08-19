@@ -5,25 +5,19 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.csd.common.io.FileIterator;
 import com.csd.io.URIStreamerFactory;
+import com.csd.core.event.EventBus;
 import com.csd.core.io.URIStreamer;
 import com.csd.core.pipeline.AbstractPump;
 import com.csd.core.pipeline.OutputPort;
 import com.csd.core.pipeline.PortBindings;
 import com.csd.core.model.Message;
 import com.csd.core.model.uri.URITriple;
-import com.csd.common.metrics.StatisticsCollector;
 
 public final class UriTripleBatchPump extends AbstractPump {
-
-    private static final Logger log = LoggerFactory.getLogger(UriTripleBatchPump.class);
 
     public static final OutputPort<List<URITriple>> OUT =
             new OutputPort<>("triples");
@@ -36,22 +30,12 @@ public final class UriTripleBatchPump extends AbstractPump {
     private long batchCounter = 0;
     private long lastEmitTime;
 
-    // [STATS] Get the singleton stats collector
-    private final Optional<StatisticsCollector> stats;
-
-     public UriTripleBatchPump(Path path,
-                              String globPattern,
-                              int batchSize,
-                              PortBindings bindings) throws IOException {
-        this(path, globPattern, batchSize, false, bindings, null);
-    }
-
     public UriTripleBatchPump(Path path,
                               String globPattern,
                               int batchSize,
                               PortBindings bindings,
-                              StatisticsCollector statisticsCollector) throws IOException {
-        this(path, globPattern, batchSize, false, bindings, statisticsCollector);
+                              EventBus bus) throws IOException {
+        this(path, globPattern, batchSize, false, bindings, bus);
     }
 
     public UriTripleBatchPump(Path path,
@@ -59,17 +43,16 @@ public final class UriTripleBatchPump extends AbstractPump {
                               int batchSize,
                               boolean flushOnFileBoundary,
                               PortBindings bindings,
-                              StatisticsCollector statisticsCollector) throws IOException {
-        super(Arrays.asList(OUT), bindings, 0);
+                              EventBus bus) throws IOException {
+        super(Arrays.asList(OUT), bindings, 0, bus);
         if (batchSize <= 0) throw new IllegalArgumentException("batchSize must be > 0");
         this.fileIterator = new FileIterator(path, globPattern == null ? "*" : globPattern);
         this.batchSize = batchSize;
         this.batch = new ArrayList<>(batchSize);
         this.flushOnFileBoundary = flushOnFileBoundary;
         this.lastEmitTime = System.nanoTime();
-        this.stats = Optional.ofNullable(statisticsCollector);
 
-        log.info("UriTripleBatchPump initialized with path={}, globPattern={}, batchSize={}, flushOnFileBoundary={}",
+        logger.info("UriTripleBatchPump initialized with path={}, globPattern={}, batchSize={}, flushOnFileBoundary={}",
                 path, globPattern, batchSize, flushOnFileBoundary);
     }
 
@@ -82,15 +65,13 @@ public final class UriTripleBatchPump extends AbstractPump {
             progressed = true;
             long fileStart = System.nanoTime();
 
-            log.info("Processing file: {}", file);
+            logger.info("Processing file: {}", file);
 
             // [STATS] Mark current file for stats
-            if(stats.isPresent()) stats.get().startFile(file.toString());
 
             try (URIStreamer streamer = URIStreamerFactory.getReader(file.toString())) {
                 Consumer<URITriple> sink = triple -> {
                     // [STATS] Count triple + components
-                    stats.ifPresent(s -> s.recordTriple());
                     acceptTriple(triple, out);
                 };
                 streamer.stream(file.toString(), sink);
@@ -99,11 +80,8 @@ public final class UriTripleBatchPump extends AbstractPump {
             long fileEnd = System.nanoTime();
             long fileDuration = fileEnd - fileStart;
 
-            log.info("Completed file: {} ({} ms)",
-                file, fileDuration / 1_000_000);
-
+            logger.info("File processed in {} ns", fileDuration);
             // [STATS] Close file stats and record timing
-            if(stats.isPresent()) stats.get().endCurrentFile(fileDuration);
 
             if (flushOnFileBoundary && !batch.isEmpty()) {
                 emitBatch(out);
@@ -116,8 +94,8 @@ public final class UriTripleBatchPump extends AbstractPump {
             return true;
         }
 
-        log.info("No more files to process. Pump stopping after {} batches.", batchCounter);
-        stop();
+        logger.info("No more files to process. Pump stopping after {} batches.", batchCounter);
+        onStop();
         return progressed;
     }
 
@@ -136,18 +114,17 @@ public final class UriTripleBatchPump extends AbstractPump {
             batchCounter++;
 
             // [STATS] Increment batch count
-            if(stats.isPresent()) stats.get().recordBatch();
 
             long now = System.nanoTime();
             long elapsedSinceLast = (now - lastEmitTime) / 1_000_000;
             lastEmitTime = now;
 
-            log.info("Emitted batch #{} with {} triples ({} ms since last batch)",
+            logger.info("Emitted batch #{} with {} triples ({} ms since last batch)",
                     batchCounter, snapshot.size(), elapsedSinceLast);
 
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
-            log.error("Interrupted while emitting batch #{}", batchCounter + 1, ie);
+            logger.error("Interrupted while emitting batch #{}", batchCounter + 1, ie);
             throw new RuntimeException("Interrupted while emitting triple batch", ie);
         } finally {
             batch.clear();

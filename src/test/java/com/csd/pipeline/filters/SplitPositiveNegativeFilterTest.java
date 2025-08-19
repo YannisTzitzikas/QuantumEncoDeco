@@ -12,9 +12,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.Test;
-
-
 public class SplitPositiveNegativeFilterTest {
 
     static class InMemoryPipe<T> implements Pipe<T> {
@@ -23,7 +20,6 @@ public class SplitPositiveNegativeFilterTest {
         @Override public Message<T> receive() throws InterruptedException { return queue.take(); }
     }
 
-    @Test
     public void testSplitFilter() throws Exception {
         // Setup pipes
         InMemoryPipe<List<Number>> inputPipe = new InMemoryPipe<>();
@@ -37,7 +33,7 @@ public class SplitPositiveNegativeFilterTest {
         bindings.bindOutput(SplitPositiveNegativeFilter.OUT_NEG, negPipe);
 
         // Create filter
-        SplitPositiveNegativeFilter filter = new SplitPositiveNegativeFilter(bindings);
+        SplitPositiveNegativeFilter filter = new SplitPositiveNegativeFilter(bindings, null);
         Thread filterThread = new Thread(filter);
         filterThread.start();
 

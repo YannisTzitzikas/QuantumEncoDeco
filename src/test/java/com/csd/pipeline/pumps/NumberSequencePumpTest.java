@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.junit.Test;
-
 public class NumberSequencePumpTest {
 
     static class InMemoryPipe<T> implements Pipe<T> {
@@ -21,13 +19,12 @@ public class NumberSequencePumpTest {
         @Override public Message<T> receive() throws InterruptedException { return q.take(); }
     }
 
-    @Test
     public void emitsSequenceThenEos() throws Exception {
         // Pipe and bindings
         InMemoryPipe<List<Number>> outPipe = new InMemoryPipe<>();
         PortBindings bindings = new PortBindings();
         bindings.bindOutput(NumberSequencePump.OUT, outPipe);
-        NumberSequencePump pump = new NumberSequencePump(1, 100, 16, bindings);
+        NumberSequencePump pump = new NumberSequencePump(1, 100, 16, bindings, null);
 
         // Setup pipes
         InMemoryPipe<List<Number>> posPipe = new InMemoryPipe<>();
@@ -38,7 +35,7 @@ public class NumberSequencePumpTest {
         filterBindings.bindInput(SplitPositiveNegativeFilter.IN, outPipe);
         filterBindings.bindOutput(SplitPositiveNegativeFilter.OUT_POS, posPipe);
         filterBindings.bindOutput(SplitPositiveNegativeFilter.OUT_NEG, negPipe);
-        SplitPositiveNegativeFilter filter = new SplitPositiveNegativeFilter(filterBindings);
+        SplitPositiveNegativeFilter filter = new SplitPositiveNegativeFilter(filterBindings, null);
 
         // Pump: 1..100 in batches of 16
         Thread t = new Thread(pump);

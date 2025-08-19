@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import com.csd.common.utils.serializer.IntegerSerializer;
 import com.csd.common.utils.serializer.StringSerializer;
+import com.csd.core.event.EventBus;
 import com.csd.core.pipeline.AbstractSink;
 import com.csd.core.pipeline.BarrierPolicy;
 
@@ -20,14 +21,17 @@ public final class StorageExportSink extends AbstractSink {
     public static final InputPort<Void> IN =
         new InputPort<>("void");
 
+    private final String            outputFileName;
     private final StorageEngine     storage;
     private final StringSerializer  stringSer  = new StringSerializer();
     private final IntegerSerializer intSer     = new IntegerSerializer();
 
-    public StorageExportSink(PortBindings bindings, StorageEngine storage) {
-        super(Arrays.asList(IN), bindings, new BarrierPolicy());
+    public StorageExportSink(PortBindings bindings, StorageEngine storage, String outputFileName, EventBus bus) {
+        super(Arrays.asList(IN), bindings, new BarrierPolicy(), bus);
         if (storage == null) throw new IllegalArgumentException("StorageEngine cannot be null");
         this.storage = storage;
+
+        this.outputFileName = outputFileName;
     }
 
 
@@ -36,7 +40,7 @@ public final class StorageExportSink extends AbstractSink {
         in.pop(IN);
         try (// Write to stdout; flush but do NOT close System.out.
         BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(new FileOutputStream("map.test"), StandardCharsets.UTF_8))) {
+                new OutputStreamWriter(new FileOutputStream(outputFileName), StandardCharsets.UTF_8))) {
             // Stream through the storage, decode, and write "String Number"
             storage.entries().forEach(entry  -> {
                 final String key = stringSer.deserialize(entry.getKey());
