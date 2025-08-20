@@ -81,9 +81,9 @@ public class R1ConfigurationTest {
     public void testR1ConfigurationHuge() throws Exception {
         Path resultsDir = Paths.get("results");
 
-        Path dataset = Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest"); // no trailing slash needed
-        Path output = resultsDir.resolve("huge_test.r1");
-        String mapFileName = resultsDir.resolve("huge_test.r1.map").toString();
+        Path dataset = Paths.get("C:\\Users\\User\\Downloads\\CIDOC_CRM_v7.1.1.rdfs.xml"); // no trailing slash needed
+        Path output = resultsDir.resolve("mini_set.r1");
+        String mapFileName = resultsDir.resolve("mini_set.r1.map").toString();
 
         testR1Configuration(dataset, output, mapFileName);
     }

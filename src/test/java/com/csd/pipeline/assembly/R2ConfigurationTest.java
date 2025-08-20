@@ -3,7 +3,6 @@ package com.csd.pipeline.assembly;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -11,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.jena.ext.com.google.common.io.Files;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -23,23 +21,16 @@ import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.model.uri.URITriple;
 import com.csd.core.pipeline.Pipe;
 import com.csd.core.pipeline.PortBindings;
-import com.csd.core.storage.StorageEngine;
 import com.csd.metrics.FileMetrics;
 import com.csd.metrics.PipelineMetrics;
 import com.csd.metrics.UriTripleMetricsWithCSV;
 import com.csd.metrics.writers.FileMetricsWriter;
 import com.csd.metrics.writers.PipelineMetricsWriter;
 import com.csd.metrics.writers.UriTripleMetricsWriter;
-import com.csd.pipeline.filters.BasisEncoderFilter;
 import com.csd.pipeline.filters.BatchFilesMergerFilter;
-import com.csd.pipeline.filters.ComponentRemoverFilter;
 import com.csd.pipeline.filters.ListToBatchFileFilter;
-import com.csd.pipeline.filters.MapStoreFilterVoid;
 import com.csd.pipeline.filters.TripleComponentExtractorFilter;
 import com.csd.pipeline.pumps.UriTripleBatchPump;
-import com.csd.pipeline.sinks.StorageExportSink;
-import com.csd.pipeline.sinks.R1UriTripleFileSink;
-import com.csd.storage.StorageEngineFactory;
 
 public class R2ConfigurationTest {
 
@@ -66,11 +57,10 @@ public class R2ConfigurationTest {
             return q.take();
         }
     }
-    
     public void testR2ConfigurationHuge() throws Exception {
         Path resultsDir = Paths.get("results");
 
-        Path dataset = Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\newtest"); // no trailing slash needed
+        Path dataset = Paths.get("C:\\Users\\User\\Desktop\\dataset"); // no trailing slash needed
         Path output = resultsDir.resolve("huge_test.r1");
         String mapFileName = resultsDir.resolve("huge_test.r1.map").toString();
 
@@ -120,14 +110,14 @@ public class R2ConfigurationTest {
                 bus);
 
         TripleComponentExtractorFilter extractor = new TripleComponentExtractorFilter(extractorBindings, bus);
-        ListToBatchFileFilter remover = new ListToBatchFileFilter(batchBindings, bus);
-        BatchFilesMergerFilter basis = new BatchFilesMergerFilter(mergerBindings, bus);
+        ListToBatchFileFilter batchCreator = new ListToBatchFileFilter(batchBindings, bus);
+        BatchFilesMergerFilter batchFileMerger = new BatchFilesMergerFilter(mergerBindings, bus);
 
         // Run pipeline components in threads
         componentExecutor.submit(pump);
         componentExecutor.submit(extractor);
-        componentExecutor.submit(remover);
-        componentExecutor.submit(basis);
+        componentExecutor.submit(batchCreator);
+        componentExecutor.submit(batchFileMerger);
 
         // Shutdown executor and wait for completion
         componentExecutor.shutdown();

@@ -55,7 +55,7 @@ public class ListToBatchFileFilter extends AbstractFilter {
 
         try (BufferedWriter writer = Files.newBufferedWriter(batchFile)) {
             for (TripleComponent entry : sortedSet) {
-                writer.write(entry.getValue());
+                writer.write(entry.getValue() + " " + entry.getRole().toString());
                 writer.newLine();
             }
         }
