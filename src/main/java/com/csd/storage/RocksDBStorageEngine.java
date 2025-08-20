@@ -136,6 +136,41 @@ public final class RocksDBStorageEngine implements StorageEngine {
     }
 
     @Override
+    public List<byte[]> getAll(List<byte[]> keys) throws StorageException {
+        ensureOpen();
+        Objects.requireNonNull(keys, "keys");
+    
+        // Validate upfront
+        for (int i = 0; i < keys.size(); i++) {
+            if (keys.get(i) == null) {
+                throw new StorageException("getAll: null key at index " + i,
+                        new RocksDBException("RocksDB error"));
+            }
+        }
+    
+        // Pre-size result list
+        byte[][] results = new byte[keys.size()][];
+    
+        int i = 0;
+        while (i < keys.size()) {
+            int end = Math.min(i + MULTIGET_CHUNK, keys.size());
+            List<byte[]> slice = keys.subList(i, end);
+            try {
+                List<byte[]> values = db.multiGetAsList(slice);
+                for (int j = 0; j < values.size(); j++) {
+                    results[i + j] = values.get(j); // may be null if not found
+                }
+            } catch (RocksDBException e) {
+                throw new StorageException("getAll failed at index " + i, e);
+            }
+            i = end;
+        }
+    
+        return Arrays.asList(results);
+    }
+
+
+    @Override
     public BitSet containsAll(List<byte[]> keys) throws StorageException {
         ensureOpen();
         Objects.requireNonNull(keys, "keys");

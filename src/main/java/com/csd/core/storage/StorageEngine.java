@@ -33,6 +33,9 @@ public interface StorageEngine {
      */
     BitSet containsAll(List<byte[]> keys) throws StorageException;
 
+
+    List<byte[]> getAll(List<byte[]> keys) throws StorageException;
+
     /**
      * Sequentially stream all key/value pairs.
      * The caller MUST close the stream to release resources.

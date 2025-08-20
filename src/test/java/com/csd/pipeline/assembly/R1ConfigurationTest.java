@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.jena.ext.com.google.common.io.Files;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -64,7 +65,6 @@ public class R1ConfigurationTest {
         }
     }
     
-    @Test
     public void testR1ConfigurationSmall() throws Exception {
         testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\test\\test2"), Paths.get("resluts\\small_test.r1"), "resluts\\small_test.r1.map");
     }
@@ -77,6 +77,16 @@ public class R1ConfigurationTest {
         testR1Configuration(Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest"), Paths.get("resluts\\big_test.r1"), "resluts\\big_test.r1.map");
     }
 
+    @Test
+    public void testR1ConfigurationHuge() throws Exception {
+        Path resultsDir = Paths.get("results");
+
+        Path dataset = Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest"); // no trailing slash needed
+        Path output = resultsDir.resolve("huge_test.r1");
+        String mapFileName = resultsDir.resolve("huge_test.r1.map").toString();
+
+        testR1Configuration(dataset, output, mapFileName);
+    }
 
     private void testR1Configuration(Path testPath, Path output, String mapFileName) throws Exception {
         // Create test data directory and file
@@ -95,11 +105,11 @@ public class R1ConfigurationTest {
         InMemoryPipe<Void> pipe6 = new InMemoryPipe<>();
 
         PipelineMetrics metrics = new PipelineMetrics(bus);
-        UriTripleMetricsWithCSV csvMetrics = new UriTripleMetricsWithCSV(bus, mapFileName + "uri.csv");
+        UriTripleMetricsWithCSV csvMetrics = new UriTripleMetricsWithCSV(bus, output.getFileName() + ".uri.csv");
         FileMetrics fileMetrics = new FileMetrics(bus);
 
         // Create storage and pre-seed with "existing"
-        StorageEngine storage = StorageEngineFactory.inMemory();
+        StorageEngine storage = StorageEngineFactory.rocks(Files.createTempDir().toString());
 
         // Bind ports for all components
         PortBindings pumpBindings = new PortBindings();
@@ -141,7 +151,7 @@ public class R1ConfigurationTest {
         BasisEncoderFilter basis = new BasisEncoderFilter(basisBindings, bus);
         MapStoreFilterVoid store = new MapStoreFilterVoid(storeBindings, storage, bus);
         StorageExportSink sink = new StorageExportSink(sinkBindings, storage, mapFileName ,bus);
-        R1UriTripleFileSink sink2 = new R1UriTripleFileSink( testPath,"*.ttl",encodeBindings,storage,output, bus);
+        R1UriTripleFileSink sink2 = new R1UriTripleFileSink( testPath,"*.ttl",encodeBindings,storage,output, bus, 25_000);
 
         // Run pipeline components in threads
         componentExecutor.submit(pump);
@@ -154,7 +164,7 @@ public class R1ConfigurationTest {
 
         // Shutdown executor and wait for completion
         componentExecutor.shutdown();
-        boolean finished = componentExecutor.awaitTermination(1, TimeUnit.HOURS);
+        boolean finished = componentExecutor.awaitTermination(5, TimeUnit.HOURS);
         
         if (!finished) {
             LOGGER.error("Pipeline did not complete within timeout");

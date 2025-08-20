@@ -1,5 +1,151 @@
 package com.csd.pipeline.assembly;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.jena.ext.com.google.common.io.Files;
+import org.junit.Test;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.csd.core.event.AsyncEventBus;
+import com.csd.core.model.Message;
+import com.csd.core.model.uri.TripleComponent;
+import com.csd.core.model.uri.URITriple;
+import com.csd.core.pipeline.Pipe;
+import com.csd.core.pipeline.PortBindings;
+import com.csd.core.storage.StorageEngine;
+import com.csd.metrics.FileMetrics;
+import com.csd.metrics.PipelineMetrics;
+import com.csd.metrics.UriTripleMetricsWithCSV;
+import com.csd.metrics.writers.FileMetricsWriter;
+import com.csd.metrics.writers.PipelineMetricsWriter;
+import com.csd.metrics.writers.UriTripleMetricsWriter;
+import com.csd.pipeline.filters.BasisEncoderFilter;
+import com.csd.pipeline.filters.BatchFilesMergerFilter;
+import com.csd.pipeline.filters.ComponentRemoverFilter;
+import com.csd.pipeline.filters.ListToBatchFileFilter;
+import com.csd.pipeline.filters.MapStoreFilterVoid;
+import com.csd.pipeline.filters.TripleComponentExtractorFilter;
+import com.csd.pipeline.pumps.UriTripleBatchPump;
+import com.csd.pipeline.sinks.StorageExportSink;
+import com.csd.pipeline.sinks.R1UriTripleFileSink;
+import com.csd.storage.StorageEngineFactory;
+
 public class R2ConfigurationTest {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(R1ConfigurationTest.class);
+
+    static class InMemoryPipe<T> implements Pipe<T> {
+        private final BlockingQueue<Message<T>> q;
+
+        public InMemoryPipe() {
+            q = new LinkedBlockingQueue<>();
+        }
+
+        public InMemoryPipe(int capacity) {
+            q = new LinkedBlockingQueue<>(capacity);
+        }
+
+        @Override
+        public void send(Message<T> msg) throws InterruptedException {
+            q.put(msg);
+        }
+
+        @Override
+        public Message<T> receive() throws InterruptedException {
+            return q.take();
+        }
+    }
+    
+    public void testR2ConfigurationHuge() throws Exception {
+        Path resultsDir = Paths.get("results");
+
+        Path dataset = Paths.get("C:\\Users\\User\\Desktop\\dataset\\bigTest\\newtest"); // no trailing slash needed
+        Path output = resultsDir.resolve("huge_test.r1");
+        String mapFileName = resultsDir.resolve("huge_test.r1.map").toString();
+
+        testR1Configuration(dataset, output, mapFileName);
+    }
+
+    private void testR1Configuration(Path testPath, Path output, String mapFileName) throws Exception {
+        // Create test data directory and file
+        // Create executor for event bus and pipeline components
+        ExecutorService componentExecutor = Executors.newFixedThreadPool(10); 
+        ExecutorService eventExecutor = Executors.newCachedThreadPool();
+
+        AsyncEventBus bus = new AsyncEventBus(eventExecutor);
+        
+        // Setup pipes
+        InMemoryPipe<List<URITriple>> pipe1 = new InMemoryPipe<>(100);
+        InMemoryPipe<Set<TripleComponent>> pipe2 = new InMemoryPipe<>();
+        InMemoryPipe<Path> pipe3 = new InMemoryPipe<>();
+        InMemoryPipe<Path> pipe4 = new InMemoryPipe<>();
+
+        PipelineMetrics metrics = new PipelineMetrics(bus);
+        UriTripleMetricsWithCSV csvMetrics = new UriTripleMetricsWithCSV(bus, output.getFileName() + ".uri.csv");
+        FileMetrics fileMetrics = new FileMetrics(bus);
+
+        // Bind ports for all components
+        PortBindings pumpBindings = new PortBindings();
+        pumpBindings.bindOutput(UriTripleBatchPump.OUT, pipe1);
+
+        PortBindings extractorBindings = new PortBindings();
+        extractorBindings.bindInput(TripleComponentExtractorFilter.IN, pipe1);
+        extractorBindings.bindOutput(TripleComponentExtractorFilter.OUT, pipe2);
+
+        PortBindings batchBindings = new PortBindings();
+        batchBindings.bindInput(ListToBatchFileFilter.IN, pipe2);
+        batchBindings.bindOutput(ListToBatchFileFilter.OUT, pipe3);
+
+        PortBindings mergerBindings = new PortBindings();
+        mergerBindings.bindInput(BatchFilesMergerFilter.IN, pipe3);
+        mergerBindings.bindOutput(BatchFilesMergerFilter.OUT, pipe4);
+
+        // Create components
+        UriTripleBatchPump pump = new UriTripleBatchPump(
+                testPath,
+                "*.ttl",
+                100_000,
+                pumpBindings,
+                bus);
+
+        TripleComponentExtractorFilter extractor = new TripleComponentExtractorFilter(extractorBindings, bus);
+        ListToBatchFileFilter remover = new ListToBatchFileFilter(batchBindings, bus);
+        BatchFilesMergerFilter basis = new BatchFilesMergerFilter(mergerBindings, bus);
+
+        // Run pipeline components in threads
+        componentExecutor.submit(pump);
+        componentExecutor.submit(extractor);
+        componentExecutor.submit(remover);
+        componentExecutor.submit(basis);
+
+        // Shutdown executor and wait for completion
+        componentExecutor.shutdown();
+        boolean finished = componentExecutor.awaitTermination(5, TimeUnit.HOURS);
+        
+        if (!finished) {
+            LOGGER.error("Pipeline did not complete within timeout");
+            componentExecutor.shutdownNow();
+        }
+
+        // Print the metrics one finale time.
+        PipelineMetricsWriter writer = new PipelineMetricsWriter();
+        writer.writeAllMetrics(metrics);
+
+        FileMetricsWriter wf = new FileMetricsWriter();
+        wf.writeAllMetrics(fileMetrics);
+
+        UriTripleMetricsWriter wt = new UriTripleMetricsWriter();
+        wt.writeMetrics(csvMetrics);
+    }
 }

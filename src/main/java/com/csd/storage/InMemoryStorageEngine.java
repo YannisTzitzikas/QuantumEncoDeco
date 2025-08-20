@@ -1,6 +1,7 @@
 package com.csd.storage;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
@@ -84,6 +85,18 @@ public final class InMemoryStorageEngine implements StorageEngine {
         }
         return result;
     }
+
+    @Override
+    public List<byte[]> getAll(List<byte[]> keys) throws StorageException {
+        ensureOpen();
+        Objects.requireNonNull(keys, "keys");
+        List<byte[]> result = new ArrayList<>(keys.size());
+        for (int i = 0; i < keys.size(); i++) {
+  
+        }
+        return result;
+    }
+
 
     @Override
     public void clear() throws StorageException {
