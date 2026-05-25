@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.csd.core.execution.operations.FilterOp;
+import com.csd.core.execution.operations.FlatMapOp;
 import com.csd.core.execution.operations.MapOp;
 import com.csd.core.execution.operations.SinkOp;
 import com.csd.core.schema.StreamVertex;
@@ -31,6 +32,19 @@ public class StreamBuilder<T> {
         graph.registerNode(nextNode);
         return new StreamBuilder<>(graph, List.of(nextNode));
     }
+
+    public <R> StreamBuilder<R> flatMap(Function<T, List<R>> flatMapper) {
+        StreamVertex<T, R> nextNode = new StreamVertex<>(new FlatMapOp<>(flatMapper));
+        
+        // Fan-in: Wire all current tail nodes to this single new flatMap node
+        for (StreamVertex<?, T> tail : tailNodes) {
+            tail.connectTo(nextNode);
+        }
+        
+        graph.registerNode(nextNode);
+        return new StreamBuilder<>(graph, List.of(nextNode));
+    }
+
 
     public StreamBuilder<T> filter(Predicate<T> predicate) {
         StreamVertex<T, T> nextNode = new StreamVertex<>(new FilterOp<>(predicate));

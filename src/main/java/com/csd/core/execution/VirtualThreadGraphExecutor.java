@@ -1,37 +1,35 @@
 package com.csd.core.execution;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
 
+import java.util.*;
+import java.util.concurrent.*;
 import com.csd.core.api.StreamEnvironment;
-import com.csd.core.execution.operations.BatchSourceOp;
-import com.csd.core.execution.operations.Operator;
-import com.csd.core.execution.operations.SinkOp;
+import com.csd.core.execution.operations.*;
 import com.csd.core.schema.StreamVertex;
 
 public class VirtualThreadGraphExecutor {
 
-    // Capacity cap to prevent fast producers from overwhelming slow consumers
     private static final int MAX_QUEUED_BATCHES = 100;
 
     public void execute(StreamEnvironment graph) throws InterruptedException {
-        // 1. Provision Queues: Every node gets an input queue
-        Map<StreamVertex<?, ?>, BlockingQueue<BatchMessage<?>>> nodeInputQueues = new HashMap<>();
+        // FIX: Mapping is now Edge-based (From -> To) instead of Node-based!
+        // This isolates communication channels completely.
+        Map<String, BlockingQueue<BatchMessage<?>>> channels = new HashMap<>();
+        
         for (StreamVertex<?, ?> node : graph.getNodes()) {
-            nodeInputQueues.put(node, new ArrayBlockingQueue<>(MAX_QUEUED_BATCHES));
+            for (Object outNode : node.getOutgoingEdges()) {
+                StreamVertex<?, ?> target = (StreamVertex<?, ?>) outNode;
+                String edgeKey = node.getId() + "->" + target.getId();
+                channels.put(edgeKey, new ArrayBlockingQueue<>(MAX_QUEUED_BATCHES));
+            }
         }
 
-        // 2. Prepare Virtual Thread Pool
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             CountDownLatch completionLatch = new CountDownLatch(graph.getNodes().size());
 
-            // 3. Launch a Virtual Thread worker for each node
             for (StreamVertex<?, ?> node : graph.getNodes()) {
                 executor.submit(() -> {
                     try {
-                        runNodeWorker(node, nodeInputQueues);
+                        runNodeWorker(node, channels);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     } finally {
@@ -40,19 +38,26 @@ public class VirtualThreadGraphExecutor {
                 });
             }
 
-            // 4. Wait for the graph execution to finish cleanly via EOS propagation
             completionLatch.await();
         }
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void runNodeWorker(StreamVertex node, Map<StreamVertex<?, ?>, BlockingQueue<BatchMessage<?>>> queues) throws InterruptedException {
+    private void runNodeWorker(StreamVertex node, Map<String, BlockingQueue<BatchMessage<?>>> channels) throws InterruptedException {
         Operator payload = node.getPayload();
-        BlockingQueue<BatchMessage<?>> myInputQueue = queues.get(node);
         
-        List<BlockingQueue<BatchMessage<?>>> downstreamQueues = new ArrayList<>();
+        // Locate all inbound channels explicitly
+        List<BlockingQueue<BatchMessage<?>>> inboundQueues = new ArrayList<>();
+        for (Object inNode : node.getIncomingEdges()) {
+            StreamVertex<?, ?> source = (StreamVertex<?, ?>) inNode;
+            inboundQueues.add(channels.get(source.getId() + "->" + node.getId()));
+        }
+
+        // Locate all outbound channels explicitly
+        List<BlockingQueue<BatchMessage<?>>> outboundQueues = new ArrayList<>();
         for (Object outNode : node.getOutgoingEdges()) {
-            downstreamQueues.add(queues.get((StreamVertex<?, ?>) outNode));
+            StreamVertex<?, ?> target = (StreamVertex<?, ?>) outNode;
+            outboundQueues.add(channels.get(node.getId() + "->" + target.getId()));
         }
 
         // --- SOURCE NODE LOGIC ---
@@ -60,46 +65,46 @@ public class VirtualThreadGraphExecutor {
             while (true) {
                 List batch = sourceOp.processBatch(null);
                 if (batch == null || batch.isEmpty()) {
-                    broadcast(downstreamQueues, BatchMessage.eos());
+                    broadcast(outboundQueues, BatchMessage.eos());
                     break;
                 }
-                broadcast(downstreamQueues, BatchMessage.data(batch));
+                broadcast(outboundQueues, BatchMessage.data(batch));
             }
             return;
         }
 
         // --- FILTER / MAP / SINK / MERGE NODE LOGIC ---
-        int expectedEosCount = node.getIncomingEdges().size();
-        int receivedEosCount = 0;
+        // Active inbound channels we need to poll data from
+        List<BlockingQueue<BatchMessage<?>>> activeInputs = new CopyOnWriteArrayList<>(inboundQueues);
 
-        while (receivedEosCount < expectedEosCount) {
-            BatchMessage<?> msg = myInputQueue.take();
+        while (!activeInputs.isEmpty()) {
+            // Fair round-robin polling across isolated input streams to prevent starvation
+            for (BlockingQueue<BatchMessage<?>> queue : activeInputs) {
+                // Use poll with a tiny timeout to avoid thread spinning while remaining non-blocking
+                BatchMessage<?> msg = queue.poll(10, TimeUnit.MILLISECONDS);
+                if (msg == null) continue;
 
-            if (msg.isEos()) {
-                receivedEosCount++;
-            } else {
-                // Process the microbatch
-                List resultBatch = payload.processBatch(msg.payload());
-
-                // FIX: Propagate DATA only if not empty. 
-                // BUT, if this is a filter, it MUST NOT block the pipeline.
-                if (!resultBatch.isEmpty()) {
-                    broadcast(downstreamQueues, BatchMessage.data(resultBatch));
+                if (msg.isEos()) {
+                    // This parent is done. Drop the isolated queue.
+                    activeInputs.remove(queue);
+                } else {
+                    List resultBatch = payload.processBatch(msg.payload());
+                    if (resultBatch != null && !resultBatch.isEmpty()) {
+                        broadcast(outboundQueues, BatchMessage.data(resultBatch));
+                    }
                 }
             }
         }
 
-        // TERMINATION:
-        // When we exit the loop, we have received EOS from all parents.
-        // We MUST signal EOS to all children to trigger their termination.
+        // When all active inputs are fully exhausted, safely broadcast downstream EOS
         if (!(payload instanceof SinkOp)) {
-            broadcast(downstreamQueues, BatchMessage.eos());
+            broadcast(outboundQueues, BatchMessage.eos());
         }
     }
 
     private void broadcast(List<BlockingQueue<BatchMessage<?>>> queues, BatchMessage<?> msg) throws InterruptedException {
         for (BlockingQueue<BatchMessage<?>> queue : queues) {
-            queue.put(msg); // Blocks if the downstream queue is full (Backpressure)
+            queue.put(msg); 
         }
     }
 }

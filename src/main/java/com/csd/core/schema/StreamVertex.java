@@ -2,11 +2,13 @@ package com.csd.core.schema;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.csd.core.execution.operations.Operator;
 
 public class StreamVertex<IN, OUT> {
     private final Operator<IN, OUT> payload;
+    private final UUID Id = UUID.randomUUID();
     
     private final List<StreamVertex<?, IN>> incomingEdges = new ArrayList<>();
     private final List<StreamVertex<OUT, ?>> outgoingEdges = new ArrayList<>();
@@ -23,4 +25,8 @@ public class StreamVertex<IN, OUT> {
     public Operator<IN, OUT> getPayload() { return payload; }
     public List<StreamVertex<OUT, ?>> getOutgoingEdges() { return outgoingEdges; }
     public List<StreamVertex<?, IN>> getIncomingEdges() { return incomingEdges; }
+
+    public UUID getId() {
+        return Id;
+    }
 }

@@ -1,4 +1,4 @@
-package com.csd.examples.common.source;
+package com.csd.examples.common.filters.sources;
 
 import java.io.IOException;
 import java.nio.file.Path;
