@@ -23,7 +23,6 @@ public final class QEDReaderFactory {
 
     // Registry
     static {
-        register("json", new QEDJsonReader());
     }
 
     /**
