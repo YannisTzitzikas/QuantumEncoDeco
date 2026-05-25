@@ -3,9 +3,9 @@ package com.csd.storage.mapper;
 import com.csd.core.storage.StorageOptions;
 import com.csd.storage.options.InMemoryOptions;
 
-import java.util.Map;
+import static com.csd.storage.mapper.MappingUtils.*;
 
-import static com.csd.common.utils.mapper.MappingUtils.*;
+import java.util.Map;
 
 public class InMemoryMapperStrategy implements StorageOptionsMappingStrategy {
     @Override

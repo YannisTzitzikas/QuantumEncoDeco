@@ -4,10 +4,10 @@ import com.csd.core.storage.StorageOptions;
 import com.csd.storage.options.Compression;
 import com.csd.storage.options.RocksOptions;
 
+import static com.csd.storage.mapper.MappingUtils.*;
+
 import java.util.Locale;
 import java.util.Map;
-
-import static com.csd.common.utils.mapper.MappingUtils.*;
 
 public class RocksMapperStrategy implements StorageOptionsMappingStrategy {
     @Override

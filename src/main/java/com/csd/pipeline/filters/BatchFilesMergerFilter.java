@@ -1,7 +1,6 @@
 package com.csd.pipeline.filters;
 
 import com.csd.core.event.EventBus;
-import com.csd.core.model.Message;
 import com.csd.core.pipeline.AbstractFilter;
 import com.csd.core.pipeline.BarrierPolicy;
 import com.csd.core.pipeline.InputPort;
@@ -9,6 +8,7 @@ import com.csd.core.pipeline.OutputPort;
 import com.csd.core.pipeline.PortBindings;
 import com.csd.events.UniqueEntityEvent;
 import com.csd.events.UniquePredicateEvent;
+import com.csd.model.Message;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

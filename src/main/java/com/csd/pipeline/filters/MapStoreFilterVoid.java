@@ -3,7 +3,6 @@ package com.csd.pipeline.filters;
 import com.csd.common.utils.serializer.IntegerSerializer;
 import com.csd.common.utils.serializer.StringSerializer;
 import com.csd.core.event.EventBus;
-import com.csd.core.model.Message;
 import com.csd.core.pipeline.AbstractFilter;
 import com.csd.core.pipeline.InputPort;
 import com.csd.core.pipeline.OutputPort;
@@ -11,6 +10,7 @@ import com.csd.core.pipeline.PortBindings;
 import com.csd.core.pipeline.StreamPolicy;
 import com.csd.core.storage.StorageEngine;
 import com.csd.core.storage.StorageException;
+import com.csd.model.Message;
 
 import java.util.Arrays;
 import java.util.HashMap;

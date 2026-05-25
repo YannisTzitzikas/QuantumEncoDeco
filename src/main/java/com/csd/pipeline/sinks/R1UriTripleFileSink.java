@@ -1,10 +1,7 @@
 package com.csd.pipeline.sinks;
 
-import com.csd.common.io.FileIterator;
 import com.csd.common.utils.serializer.IntegerSerializer;
 import com.csd.common.utils.serializer.StringSerializer;
-import com.csd.core.model.uri.TripleComponent;
-import com.csd.core.model.uri.URITriple;
 import com.csd.core.pipeline.AbstractSink;
 import com.csd.core.pipeline.BarrierPolicy;
 import com.csd.core.pipeline.InputPort;
@@ -14,6 +11,9 @@ import com.csd.core.storage.StorageException;
 import com.csd.events.UniqueEntityEvent;
 import com.csd.events.UniquePredicateEvent;
 import com.csd.io.URIStreamerFactory;
+import com.csd.model.TripleComponent;
+import com.csd.model.URITriple;
+import com.csd.pipeline.pumps.FileIterator;
 import com.csd.core.event.EventBus;
 import com.csd.core.io.URIStreamer;
 

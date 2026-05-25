@@ -3,8 +3,6 @@ package com.csd.pipeline.filters;
 import com.csd.common.utils.serializer.Serializer;
 import com.csd.common.utils.serializer.StringSerializer;
 import com.csd.core.event.EventBus;
-import com.csd.core.model.Message;
-import com.csd.core.model.uri.TripleComponent;
 import com.csd.core.pipeline.AbstractFilter;
 import com.csd.core.pipeline.InputPort;
 import com.csd.core.pipeline.OutputPort;
@@ -15,6 +13,8 @@ import com.csd.core.storage.StorageException;
 import com.csd.events.RecordBatchEvent;
 import com.csd.events.UniqueEntityEvent;
 import com.csd.events.UniquePredicateEvent;
+import com.csd.model.Message;
+import com.csd.model.TripleComponent;
 
 import java.util.ArrayList;
 import java.util.Arrays;

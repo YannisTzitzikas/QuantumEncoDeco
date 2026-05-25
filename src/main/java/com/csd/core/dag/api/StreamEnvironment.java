@@ -1,4 +1,4 @@
-package com.csd.dag.api;
+package com.csd.core.dag.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,9 +7,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.csd.dag.execution.VirtualThreadGraphExecutor;
-import com.csd.dag.execution.operations.BatchSourceOp;
-import com.csd.dag.schema.StreamVertex;
+import com.csd.core.dag.execution.VirtualThreadGraphExecutor;
+import com.csd.core.dag.execution.operations.BatchSourceOp;
+import com.csd.core.dag.schema.StreamVertex;
 
 public class StreamEnvironment {
     private final List<StreamVertex<?, ?>> nodes = new ArrayList<>();

@@ -1,9 +1,9 @@
-package com.csd.dag.schema;
+package com.csd.core.dag.schema;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.csd.dag.execution.operations.Operator;
+import com.csd.core.dag.execution.operations.Operator;
 
 public class StreamVertex<IN, OUT> {
     private final Operator<IN, OUT> payload;

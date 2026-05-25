@@ -1,12 +1,12 @@
 package com.csd.pipeline.filters;
 
 import com.csd.core.event.EventBus;
-import com.csd.core.model.Message;
 import com.csd.core.pipeline.AbstractFilter;
 import com.csd.core.pipeline.InputPort;
 import com.csd.core.pipeline.JoinPolicy;
 import com.csd.core.pipeline.OutputPort;
 import com.csd.core.pipeline.PortBindings;
+import com.csd.model.Message;
 
 import java.util.Arrays;
 import java.util.HashMap;

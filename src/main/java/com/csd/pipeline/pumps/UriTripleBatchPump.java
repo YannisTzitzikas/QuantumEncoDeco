@@ -7,8 +7,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-import com.csd.common.io.FileIterator;
 import com.csd.io.URIStreamerFactory;
+import com.csd.model.Message;
+import com.csd.model.URITriple;
 import com.csd.core.event.EventBus;
 import com.csd.core.io.URIStreamer;
 import com.csd.core.pipeline.AbstractPump;
@@ -17,8 +18,6 @@ import com.csd.core.pipeline.PortBindings;
 import com.csd.events.BatchProcessedEvent;
 import com.csd.events.FileProcessingCompletedEvent;
 import com.csd.events.FileProcessingStartedEvent;
-import com.csd.core.model.Message;
-import com.csd.core.model.uri.URITriple;
 
 public final class UriTripleBatchPump extends AbstractPump {
 

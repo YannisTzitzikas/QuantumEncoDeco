@@ -1,6 +1,6 @@
 package com.csd.core.pipeline;
 
-import com.csd.core.model.Message;
+import com.csd.model.Message;
 
 public interface Pipe<T> {
     void send(Message<T> msg)   throws InterruptedException;

@@ -12,8 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.csd.core.io.URIStreamer;
-import com.csd.core.model.uri.TripleComponent;
-import com.csd.core.model.uri.URITriple;
+import com.csd.model.TripleComponent;
+import com.csd.model.URITriple;
 
 import java.util.function.Consumer;
 

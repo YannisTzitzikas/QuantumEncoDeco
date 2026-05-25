@@ -2,10 +2,10 @@ package com.csd.storage.mapper;
 
 import com.csd.core.storage.StorageOptions;
 
+import static com.csd.storage.mapper.MappingUtils.getString;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.csd.common.utils.mapper.MappingUtils.getString;
 
 public final class StorageOptionsMapper {
 

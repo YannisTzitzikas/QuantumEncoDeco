@@ -1,9 +1,9 @@
 package com.csd.core.pipeline;
 
-import com.csd.core.model.Message;
-
 import java.util.Deque;
 import java.util.Map;
+
+import com.csd.model.Message;
 
 public final class PortInbox {
     // Per-input-port unconsumed messages

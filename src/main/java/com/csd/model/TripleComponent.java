@@ -1,4 +1,4 @@
-package com.csd.core.model.uri;
+package com.csd.model;
 
 public final class TripleComponent {
     public enum Kind { IRI, LITERAL, BLANK_NODE, UNKNOWN }

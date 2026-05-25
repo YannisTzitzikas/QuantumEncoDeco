@@ -1,4 +1,4 @@
-package com.csd.core.model.uri;
+package com.csd.model;
 
 public final class URITriple {
     private final TripleComponent subject;

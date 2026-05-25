@@ -1,4 +1,4 @@
-package com.csd.core.model;
+package com.csd.model;
 
 import java.util.Objects;
 

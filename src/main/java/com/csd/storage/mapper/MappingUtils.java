@@ -1,4 +1,4 @@
-package com.csd.common.utils.mapper;
+package com.csd.storage.mapper;
 
 import java.util.ArrayList;
 import java.util.Collections;

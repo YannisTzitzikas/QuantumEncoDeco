@@ -1,4 +1,4 @@
-package com.csd.dag.api;
+package com.csd.core.dag.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,10 +6,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.csd.dag.execution.operations.FilterOp;
-import com.csd.dag.execution.operations.MapOp;
-import com.csd.dag.execution.operations.SinkOp;
-import com.csd.dag.schema.StreamVertex;
+import com.csd.core.dag.execution.operations.FilterOp;
+import com.csd.core.dag.execution.operations.MapOp;
+import com.csd.core.dag.execution.operations.SinkOp;
+import com.csd.core.dag.schema.StreamVertex;
 
 public class StreamBuilder<T> {
     private final StreamEnvironment graph;

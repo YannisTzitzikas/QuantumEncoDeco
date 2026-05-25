@@ -5,8 +5,8 @@ import com.csd.core.event.FilterLoopStartedEvent;
 import com.csd.core.event.FilterLoopStoppedEvent;
 import com.csd.core.event.FilterStartedEvent;
 import com.csd.core.event.FilterStoppedEvent;
+import com.csd.model.Message;
 
-import com.csd.core.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

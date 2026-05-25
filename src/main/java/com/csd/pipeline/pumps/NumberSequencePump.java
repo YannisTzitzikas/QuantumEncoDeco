@@ -1,8 +1,8 @@
 package com.csd.pipeline.pumps;
 
 import com.csd.core.event.EventBus;
-import com.csd.core.model.Message;
 import com.csd.core.pipeline.*;
+import com.csd.model.Message;
 
 import java.util.ArrayList;
 import java.util.Arrays;
