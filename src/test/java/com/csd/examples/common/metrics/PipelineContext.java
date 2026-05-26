@@ -5,11 +5,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * High-performance, lock-free operational telemetry context.
  * Replaces EventBus architecture by leveraging CPU-level atomic instruction updates.
  */
 public class PipelineContext {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PipelineContext.class);
 
     private final LongAdder totalTriplesProcessed = new LongAdder();
     private final LongAdder totalBatchesProcessed = new LongAdder();
@@ -23,6 +27,8 @@ public class PipelineContext {
 
     public void incrementBatches() {
         totalBatchesProcessed.increment();
+        LOGGER.info("Total batches processed: {}", getTotalBatches());
+        LOGGER.info("Total triples processed: {}", getTotalTriples());
     }
 
     public void addTriples(long count) {

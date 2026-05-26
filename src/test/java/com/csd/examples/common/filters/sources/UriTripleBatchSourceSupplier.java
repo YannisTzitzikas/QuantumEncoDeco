@@ -10,8 +10,9 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFParser;
-import org.apache.jena.riot.system.StreamRDF;
-import org.apache.jena.riot.system.StreamRDFBase;
+import org.apache.jena.riot.lang.PipedRDFIterator;
+import org.apache.jena.riot.lang.PipedRDFStream;
+import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +21,8 @@ import com.csd.examples.common.model.TripleComponent;
 import com.csd.examples.common.model.URITriple;
 
 /**
- * Self-contained Test/Example Source Supplier.
- * Integrates the Apache Jena RDF parsing routine directly with file-system iterations
- * and inline lock-free metrics tracking, chunking records on demand for the DAG core engine.
+ * Integrates Apache Jena RDF parsing with a PipedRDFIterator to bridge
+ * Jena's push-based parsing with the pipeline's pull-based batching.
  */
 public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UriTripleBatchSourceSupplier.class);
@@ -30,15 +30,14 @@ public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
     private final FileIterator fileIterator;
     private final int batchSize;
     private final boolean flushOnFileBoundary;
-    private final PipelineContext metricsContext; // Replaced EventBus
+    private final PipelineContext metricsContext;
 
-    // Local accumulation buffer retained across engine pull boundaries
-    private final List<URITriple> internalBuffer;
-    
     private Path currentFile = null;
     private long currentFileStartTime = 0;
     private boolean exhausted = false;
-    private final StreamRDF jenaStreamHook;
+
+    // Jena Piped stream components for thread-safe pull parsing
+    private PipedRDFIterator<Triple> currentTripleIterator = null;
 
     public UriTripleBatchSourceSupplier(Path path,
                                          String globPattern,
@@ -50,83 +49,93 @@ public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
         this.batchSize = batchSize;
         this.flushOnFileBoundary = flushOnFileBoundary;
         this.metricsContext = metricsContext;
-        this.internalBuffer = new ArrayList<>(batchSize);
-        
-        // Pass parsed Jena triples straight into our microbatch processing buffer
-        this.jenaStreamHook = new StreamRDFBase() {
-            @Override
-            public void triple(Triple jenaTriple) {
-                internalBuffer.add(convertTriple(jenaTriple));
-            }
-        };
     }
 
     @Override
     public List<URITriple> get() {
         if (exhausted) {
-            return null; // Signals terminal EOS to the virtual thread executor
+            return null; // Signals terminal EOS
         }
 
+        List<URITriple> batch = new ArrayList<>(batchSize);
+
         try {
-            while (internalBuffer.size() < batchSize) {
-                if (currentFile == null) {
-                    if (!fileIterator.hasNext()) {
-                        if (!internalBuffer.isEmpty()) {
-                            return drainAndRecordBuffer();
+            while (batch.size() < batchSize) {
+                // If we don't have an active iterator, or the current one is empty, load the next file
+                if (currentTripleIterator == null || !currentTripleIterator.hasNext()) {
+                    
+                    // 1. Finalize the previous file if it existed
+                    if (currentFile != null) {
+                        long duration = System.nanoTime() - currentFileStartTime;
+                        LOGGER.info("File {} processed in {} ns", currentFile.getFileName(), duration);
+                        if (metricsContext != null) {
+                            metricsContext.recordFileCompletion(currentFile.toString(), duration);
                         }
-                        exhausted = true;
-                        return null; 
+                        currentFile = null;
+
+                        // Flush partial batch if boundary flag is set
+                        if (flushOnFileBoundary && !batch.isEmpty()) {
+                            return recordAndDispatch(batch);
+                        }
                     }
 
+                    // 2. Check for next file
+                    if (!fileIterator.hasNext()) {
+                        exhausted = true;
+                        break; // Break loop to return whatever is left in the batch
+                    }
+
+                    // 3. Setup next file
                     currentFile = fileIterator.next();
                     currentFileStartTime = System.nanoTime();
                     LOGGER.info("Processing file: {}", currentFile);
+                    startParserThread(currentFile);
                 }
 
-                String filePathStr = currentFile.toString();
-                
-                // Synchronously parse file records into internalBuffer
-                RDFParser.source(filePathStr)
-                         .lang(RDFLanguages.filenameToLang(filePathStr))
-                         .parse(jenaStreamHook);
-
-                long duration = System.nanoTime() - currentFileStartTime;
-                LOGGER.info("File processed in {} ns", duration);
-                
-                // Direct Inline Recording replacing old async EventBus publications
-                if (metricsContext != null) {
-                    metricsContext.recordFileCompletion(filePathStr, duration);
-                }
-
-                currentFile = null;
-
-                if (flushOnFileBoundary && !internalBuffer.isEmpty()) {
-                    return drainAndRecordBuffer();
+                // Safely pull the next triple from the background parsing thread
+                if (currentTripleIterator.hasNext()) {
+                    batch.add(convertTriple(currentTripleIterator.next()));
                 }
             }
-
-            return drainAndRecordBuffer();
 
         } catch (Exception e) {
             LOGGER.error("[ERROR] Failure processing parsing sequence at file: " + currentFile, e);
             exhausted = true;
-            return null;
+            return batch.isEmpty() ? null : recordAndDispatch(batch);
         }
+
+        return batch.isEmpty() ? null : recordAndDispatch(batch);
     }
 
-    /**
-     * Drains the accumulator buffer while safely adding counts to the pipeline telemetry trackers
-     */
-    private List<URITriple> drainAndRecordBuffer() {
-        List<URITriple> dispatchSnapshot = new ArrayList<>(internalBuffer);
-        
-        if (metricsContext != null && !dispatchSnapshot.isEmpty()) {
+    private void startParserThread(Path file) {
+        // Buffer size for the pipe. batchSize * 2 ensures smooth thread handoffs
+        currentTripleIterator = new PipedRDFIterator<>(batchSize * 2);
+        PipedRDFStream<Triple> inputStream = new PipedTriplesStream(currentTripleIterator);
+
+        Thread parserThread = new Thread(() -> {
+            try {
+                String filePathStr = file.toString();
+                RDFParser.source(filePathStr)
+                         .lang(RDFLanguages.filenameToLang(filePathStr))
+                         .parse(inputStream);
+            } catch (Exception e) {
+                LOGGER.error("Parsing failed for file: " + file, e);
+            } finally {
+                inputStream.finish();
+            }
+        });
+
+        parserThread.setName("RDF-Parser-" + file.getFileName());
+        parserThread.setDaemon(true);
+        parserThread.start();
+    }
+
+    private List<URITriple> recordAndDispatch(List<URITriple> batch) {
+        if (metricsContext != null && !batch.isEmpty()) {
             metricsContext.incrementBatches();
-            metricsContext.addTriples(dispatchSnapshot.size());
+            metricsContext.addTriples(batch.size());
         }
-        
-        internalBuffer.clear();
-        return dispatchSnapshot;
+        return batch;
     }
 
     private URITriple convertTriple(Triple triple) {
