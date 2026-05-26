@@ -1,12 +1,12 @@
 # QuantumEncoDeco
 
-![QuantumEncoDeco.](misc\imgs\quantumEncoDecoLogo.png)
+![QuantumEncoDeco.](./misc/imgs/quantumEncoDecoLogo.png)
 
 ## Description
 A Java framework for __encoding__ Knowledge Graphs (represented in RDF) as numeric data for being suitable to use for creating quantum states. It also supports the __decoding__ of results.
 The basic idea of the encodings can be illustrated as:
 
-![QuantumEncoDeco.](misc\imgs\exampleR1R2.png)
+![QuantumEncoDeco.](./misc/imgs/exampleR1R2.png)
 
 ## How to Use
 
