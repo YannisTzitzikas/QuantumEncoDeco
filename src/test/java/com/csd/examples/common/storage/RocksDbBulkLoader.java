@@ -21,6 +21,7 @@ public class RocksDbBulkLoader {
      * @param isReverseMapping True for Decoding (ID -> URI), False for Encoding (URI -> ID)
      * @param prependLabel If true, scopes keys using "LABEL:" to avoid cross-domain key collisions
      */
+    @SuppressWarnings("resource")
     public static void populateFromMultipleTextFiles(List<Path> textMappingFiles,
                                                      List<String> labels,
                                                      String rocksDbTargetDir,
