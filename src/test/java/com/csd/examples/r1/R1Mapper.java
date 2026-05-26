@@ -37,7 +37,7 @@ public class R1Mapper {
         WindowedChunkMerger entityMerger = new WindowedChunkMerger(entityWorkDir, "ENTITY", metricsContext);
         BoundedMemorySortSink memorySink = new BoundedMemorySortSink(entityMerger, 200_000);
         UriTripleBatchSourceSupplier sourceSupplier = new UriTripleBatchSourceSupplier(
-            inputDataFile, "*.ttl", 25_000, false, metricsContext
+            inputDataFile, "*.ttl",  true, metricsContext
         );
         
         StreamEnvironment graph = new StreamEnvironment(); 
@@ -66,6 +66,8 @@ public class R1Mapper {
         // Print Execution Summary and Historical Metrics
         PipelineMetricsReportWriter reportWriter = new PipelineMetricsReportWriter();
         reportWriter.generateExecutionReports(metricsContext);
+
+        tempWorkspace.toFile().delete();
         
         LOGGER.info("R1 Pipeline Execution Complete. Pipeline duration: {} ms", pipelineDuration / 1_000_000.0);
     }

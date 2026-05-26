@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
-
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.riot.RDFLanguages;
@@ -16,55 +14,47 @@ import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.csd.core.api.functions.AdaptiveBatchSupplier;
 import com.csd.examples.common.metrics.PipelineContext;
 import com.csd.examples.common.model.TripleComponent;
 import com.csd.examples.common.model.URITriple;
 
-/**
- * Integrates Apache Jena RDF parsing with a PipedRDFIterator to bridge
- * Jena's push-based parsing with the pipeline's pull-based batching.
- */
-public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
+public class UriTripleBatchSourceSupplier implements AdaptiveBatchSupplier<URITriple> {
     private static final Logger LOGGER = LoggerFactory.getLogger(UriTripleBatchSourceSupplier.class);
 
+    // Jena cannot go faster
+    private static final int PARSER_PIPE_BUFFER_SIZE = 2_000_000;
+
     private final FileIterator fileIterator;
-    private final int batchSize;
     private final boolean flushOnFileBoundary;
     private final PipelineContext metricsContext;
 
     private Path currentFile = null;
     private long currentFileStartTime = 0;
     private boolean exhausted = false;
-
-    // Jena Piped stream components for thread-safe pull parsing
     private PipedRDFIterator<Triple> currentTripleIterator = null;
 
     public UriTripleBatchSourceSupplier(Path path,
                                          String globPattern,
-                                         int batchSize,
                                          boolean flushOnFileBoundary,
                                          PipelineContext metricsContext) throws IOException {
-        if (batchSize <= 0) throw new IllegalArgumentException("batchSize must be > 0");
         this.fileIterator = new FileIterator(path, globPattern == null ? "*" : globPattern);
-        this.batchSize = batchSize;
         this.flushOnFileBoundary = flushOnFileBoundary;
         this.metricsContext = metricsContext;
     }
 
     @Override
-    public List<URITriple> get() {
+    public List<URITriple> getBatch(int targetSize) {
         if (exhausted) {
-            return null; // Signals terminal EOS
+            return null; 
         }
 
-        List<URITriple> batch = new ArrayList<>(batchSize);
+        List<URITriple> batch = new ArrayList<>(targetSize);
 
         try {
-            while (batch.size() < batchSize) {
-                // If we don't have an active iterator, or the current one is empty, load the next file
+            while (batch.size() < targetSize) {
                 if (currentTripleIterator == null || !currentTripleIterator.hasNext()) {
                     
-                    // 1. Finalize the previous file if it existed
                     if (currentFile != null) {
                         long duration = System.nanoTime() - currentFileStartTime;
                         LOGGER.info("File {} processed in {} ns", currentFile.getFileName(), duration);
@@ -73,33 +63,29 @@ public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
                         }
                         currentFile = null;
 
-                        // Flush partial batch if boundary flag is set
                         if (flushOnFileBoundary && !batch.isEmpty()) {
                             return recordAndDispatch(batch);
                         }
                     }
 
-                    // 2. Check for next file
                     if (!fileIterator.hasNext()) {
                         exhausted = true;
-                        break; // Break loop to return whatever is left in the batch
+                        break; 
                     }
 
-                    // 3. Setup next file
                     currentFile = fileIterator.next();
                     currentFileStartTime = System.nanoTime();
                     LOGGER.info("Processing file: {}", currentFile);
                     startParserThread(currentFile);
                 }
 
-                // Safely pull the next triple from the background parsing thread
                 if (currentTripleIterator.hasNext()) {
                     batch.add(convertTriple(currentTripleIterator.next()));
                 }
             }
 
         } catch (Exception e) {
-            LOGGER.error("[ERROR] Failure processing parsing sequence at file: " + currentFile, e);
+            LOGGER.error("[ERROR] Failure processing adaptive parsing sequence at: " + currentFile, e);
             exhausted = true;
             return batch.isEmpty() ? null : recordAndDispatch(batch);
         }
@@ -108,8 +94,10 @@ public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
     }
 
     private void startParserThread(Path file) {
-        // Buffer size for the pipe. batchSize * 2 ensures smooth thread handoffs
-        currentTripleIterator = new PipedRDFIterator<>(batchSize * 2);
+        // Initializing the Jena pipe iterator using a dedicated look-ahead buffer capacity.
+        // The parser thread will cleanly fill this buffer up to 100,000 triples ahead,
+        // blocking only if the DAG engine falls behind.
+        currentTripleIterator = new PipedRDFIterator<>(PARSER_PIPE_BUFFER_SIZE);
         PipedRDFStream<Triple> inputStream = new PipedTriplesStream(currentTripleIterator);
 
         Thread parserThread = new Thread(() -> {
@@ -147,8 +135,8 @@ public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
     }
 
     private TripleComponent nodeToComponent(Node node, TripleComponent.Role role) {
+        String value;
         TripleComponent.Kind kind;
-
         if (node.isURI()) {
             kind = TripleComponent.Kind.IRI;
             return new TripleComponent(node.getURI(), kind, role);
@@ -157,8 +145,7 @@ public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
             return new TripleComponent("_:b" + node.getBlankNodeId().getLabelString(), kind, role);
         } else if (node.isLiteral()) {
             kind = TripleComponent.Kind.LITERAL;
-            String value = node.getLiteralLexicalForm();
-
+            value = node.getLiteralLexicalForm();
             if (node.getLiteralLanguage() != null && !node.getLiteralLanguage().isEmpty()) {
                 value = "\"" + escape(value) + "\"" + "@" + node.getLiteralLanguage();
             } else if (node.getLiteralDatatypeURI() != null) {
@@ -166,10 +153,8 @@ public class UriTripleBatchSourceSupplier implements Supplier<List<URITriple>> {
             } else {
                 value = "\"" + escape(value) + "\"";
             }
-
             return new TripleComponent(value, kind, role);
         }
-
         kind = TripleComponent.Kind.UNKNOWN;
         return new TripleComponent(node.toString(), kind, role);
     }

@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import com.csd.core.execution.operations.BatchMapOp;
 import com.csd.core.execution.operations.FilterOp;
 import com.csd.core.execution.operations.FlatMapOp;
 import com.csd.core.execution.operations.MapOp;
@@ -29,6 +30,15 @@ public class StreamBuilder<T> {
 
     public <R> StreamBuilder<R> map(Function<T, R> mapper) {
         StreamVertex<T, R> nextNode = new StreamVertex<>(new MapOp<>(mapper));
+        for (StreamVertex<?, T> tail : tailNodes) {
+            tail.connectTo(nextNode);
+        }
+        graph.registerNode(nextNode);
+        return new StreamBuilder<>(graph, List.of(nextNode));
+    }
+
+    public <R> StreamBuilder<R> batchMap(Function<List<T>, List<R>> mapper) {
+        StreamVertex<T, R> nextNode = new StreamVertex<>(new BatchMapOp<>(mapper));
         for (StreamVertex<?, T> tail : tailNodes) {
             tail.connectTo(nextNode);
         }

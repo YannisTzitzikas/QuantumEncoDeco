@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.csd.core.api.StreamEnvironment;
-import com.csd.examples.common.filters.operations.R1RocksDbEncoderMap;
+import com.csd.examples.common.filters.operations.R1RocksDbEncoderBatchOp;
 import com.csd.examples.common.filters.sources.UriTripleBatchSourceSupplier;
 import com.csd.examples.common.metrics.PipelineContext;
 import com.csd.examples.common.storage.ManagedRocksDb;
@@ -20,7 +20,7 @@ public class R1Encoder {
     @Test
     public void R1EncodeURIs() throws Exception {
         PipelineContext metricsContext = new PipelineContext();
-        Path inputDataFile = Paths.get("src", "test", "resources", "data.xml").toAbsolutePath(); 
+        Path inputDataFile = Paths.get("src", "test", "resources", "data.xml").toAbsolutePath();
         Path outputEncodedFile = Paths.get("results", "r1",  "encoded_triples.bits");
         Path textMappingFile = Paths.get("results", "r1", "global_mappings.dat");
         
@@ -31,7 +31,7 @@ public class R1Encoder {
         int bitWidthN = calculateBitWidth(textMappingFile);
 
         UriTripleBatchSourceSupplier sourceSupplier = new UriTripleBatchSourceSupplier(
-            inputDataFile, "*.ttl", 25_000, false, metricsContext
+            inputDataFile, "*.ttl",  false, metricsContext
         );
         
         // try-with-resources guarantees no memory leaks
@@ -39,7 +39,7 @@ public class R1Encoder {
             StreamEnvironment graph = new StreamEnvironment();
 
             graph.fromSource(sourceSupplier)
-                 .map(new R1RocksDbEncoderMap(forwardDb.get(), bitWidthN))
+                 .batchMap(new R1RocksDbEncoderBatchOp(forwardDb.get(), bitWidthN))
                  .sink(outputEncodedFile);
 
             LOGGER.info("Starting Forward Encoding Phase...");

@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.csd.core.api.StreamEnvironment;
-import com.csd.examples.common.filters.operations.R1RocksDbDecoderMap;
+import com.csd.examples.common.filters.operations.R1RocksDbDecoderBatchOp;
 import com.csd.examples.common.filters.sources.EncodedBitstringSourceSupplier;
 import com.csd.examples.common.storage.ManagedRocksDb;
 import com.csd.examples.common.storage.RocksDbBulkLoader;
@@ -29,13 +29,13 @@ public class R1Decoder {
         int bitWidthN = R1Encoder.calculateBitWidth(textMappingFile);
 
         // Uses a generic text reader source
-        EncodedBitstringSourceSupplier bitSource = new EncodedBitstringSourceSupplier(encodedFile, 25_000);
+        EncodedBitstringSourceSupplier bitSource = new EncodedBitstringSourceSupplier(encodedFile, 100_000);
 
         try (ManagedRocksDb reverseDb = new ManagedRocksDb(reverseDbDir, false)) {
             StreamEnvironment graph = new StreamEnvironment();
 
             graph.fromSource(bitSource)
-                 .map(new R1RocksDbDecoderMap(reverseDb.get(), bitWidthN))
+                 .batchMap(new R1RocksDbDecoderBatchOp(reverseDb.get(), bitWidthN))
                  .sink(decodedOutputFile);
 
             LOGGER.info("Starting Reverse Decoding Phase...");

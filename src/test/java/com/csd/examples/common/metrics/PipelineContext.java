@@ -28,11 +28,11 @@ public class PipelineContext {
     public void incrementBatches() {
         totalBatchesProcessed.increment();
         LOGGER.info("Total batches processed: {}", getTotalBatches());
-        LOGGER.info("Total triples processed: {}", getTotalTriples());
     }
-
+    
     public void addTriples(long count) {
         totalTriplesProcessed.add(count);
+        LOGGER.info("Total triples processed: {}", getTotalTriples());
     }
 
     public void addUniqueEntities(long count) {

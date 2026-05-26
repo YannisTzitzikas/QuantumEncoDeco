@@ -45,7 +45,7 @@ public class R2Encoder {
         // 3. Setup Stream topology using ManagedRocksDb wrapper to completely rule out leaks
         try (ManagedRocksDb forwardDb = new ManagedRocksDb(forwardDbDir, false)) {
             UriTripleBatchSourceSupplier sourceSupplier = new UriTripleBatchSourceSupplier(
-                inputDataFile, "*.ttl", 25_000, false, metricsContext
+                inputDataFile, "*.ttl",  false, metricsContext
             );
 
             StreamEnvironment graph = new StreamEnvironment();

@@ -12,9 +12,12 @@ import com.csd.examples.common.model.TripleComponent;
 
 public class BoundedMemorySortSink implements Consumer<TripleComponent> {
 
-    private final SortedSet<String> memoryAccumulator;
+    private SortedSet<String> memoryAccumulator;
     private final int maxMemoryCapacity;
     private final WindowedChunkMerger chunkMerger;
+    
+    // Dedicated lock object for micro-synchronization
+    private final Object lock = new Object();
 
     public BoundedMemorySortSink(WindowedChunkMerger chunkMerger, int maxMemoryCapacity) {
         this.chunkMerger = chunkMerger;
@@ -24,25 +27,49 @@ public class BoundedMemorySortSink implements Consumer<TripleComponent> {
 
     @Override
     public void accept(TripleComponent comp) {
-        if (comp != null && comp.getValue() != null) {
+        if (comp == null || comp.getValue() == null) {
+            return;
+        }
+
+        SortedSet<String> readyToFlush = null;
+
+        // 1. FAST LOCK: Only lock while actively inserting into the TreeSet
+        synchronized (lock) {
             memoryAccumulator.add(comp.getValue());
             
             if (memoryAccumulator.size() >= maxMemoryCapacity) {
-                flushBufferToDisk();
+                // Detach the full buffer so it can be written safely
+                readyToFlush = memoryAccumulator;
+                // Instantly replace it with a fresh buffer for other threads
+                memoryAccumulator = new TreeSet<>();
             }
+        }
+
+        // 2. HEAVY I/O: Write to disk OUTSIDE the lock so we don't block the stream
+        if (readyToFlush != null) {
+            writeAndRegister(readyToFlush);
         }
     }
 
     public void flushRemaining() {
-        if (!memoryAccumulator.isEmpty()) {
-            flushBufferToDisk();
+        SortedSet<String> readyToFlush = null;
+        
+        synchronized (lock) {
+            if (!memoryAccumulator.isEmpty()) {
+                readyToFlush = memoryAccumulator;
+                memoryAccumulator = new TreeSet<>(); 
+            }
+        }
+        
+        if (readyToFlush != null) {
+            writeAndRegister(readyToFlush);
         }
     }
 
-    private void flushBufferToDisk() {
+    private void writeAndRegister(SortedSet<String> dataChunk) {
         try {
-            Path chunkPath = chunkMerger.writeInitialSortedChunk(memoryAccumulator);
-            memoryAccumulator.clear(); 
+            // The chunk is now isolated; no other threads can modify it.
+            Path chunkPath = chunkMerger.writeInitialSortedChunk(dataChunk);
             chunkMerger.registerAndProgressMerge(chunkPath);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to flush streaming memory buffer", e);

@@ -47,7 +47,7 @@ public class R2Mapper {
             VirtualThreadGraphExecutor executor = new VirtualThreadGraphExecutor();
 
             UriTripleBatchSourceSupplier sourceSupplier = new UriTripleBatchSourceSupplier(
-                inputDataFile, "*.ttl", 25_000, false, metricsContext
+                inputDataFile, "*.ttl",  false, metricsContext
             );
 
             // Establish the shared pipeline root source node
@@ -92,6 +92,8 @@ public class R2Mapper {
 
             LOGGER.info("Serializing final predicates file to: {}", finalPredicatesFile.toAbsolutePath());
             predicateMerger.executeFinalMergePass(finalPredicatesFile);
+            
+            tempWorkspace.toFile().delete();
 
             // Telemetry Report Dump
             PipelineMetricsReportWriter reportWriter = new PipelineMetricsReportWriter();
