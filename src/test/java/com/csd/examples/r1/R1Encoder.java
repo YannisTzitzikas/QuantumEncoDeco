@@ -1,72 +1,65 @@
 package com.csd.examples.r1;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.*;
-import java.util.*;
-
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.csd.core.api.StreamEnvironment; // Matches your StreamEnvironment/TaskGraph API
-import com.csd.examples.common.filters.operations.WindowedChunkMerger;
-import com.csd.examples.common.filters.sinks.BoundedMemorySortSink;
+import com.csd.core.api.StreamEnvironment;
+import com.csd.examples.common.filters.operations.R1RocksDbEncoderMap;
 import com.csd.examples.common.filters.sources.UriTripleBatchSourceSupplier;
 import com.csd.examples.common.metrics.PipelineContext;
-import com.csd.examples.common.metrics.PipelineMetricsReportWriter;
-import com.csd.examples.common.model.TripleComponent;
+import com.csd.examples.common.storage.ManagedRocksDb;
+import com.csd.examples.common.storage.RocksDbBulkLoader;
 
 public class R1Encoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(R1Encoder.class);
 
     @Test
-    public void testR1PipelineWithStreamingKWayMerge() throws Exception {
-
-        // Telemetry
+    public void R1EncodeURIs() throws Exception {
         PipelineContext metricsContext = new PipelineContext();
+        Path inputDataFile = Paths.get("src", "test", "resources", "data.xml").toAbsolutePath(); 
+        Path outputEncodedFile = Paths.get("results", "r1",  "encoded_triples.bits");
+        Path textMappingFile = Paths.get("results", "r1", "global_mappings.dat");
+        
+        // Note: Forward DB uses 'false' (URI -> ID)
+        String forwardDbDir = "results/r1/rocks_forward_db"; 
+        RocksDbBulkLoader.populateFromTextFile(textMappingFile, forwardDbDir, false);
+        
+        int bitWidthN = calculateBitWidth(textMappingFile);
 
-        // Directories
-        Path tempWorkspace = Files.createTempDirectory("r1_test_workspace_");
-        Path inputDataFile = Paths.get("src", "test", "resources", "data.xml").toAbsolutePath();
-        Path finalMappingFile = Paths.get("results/global_mappings.dat");
-        Path entityWorkDir = Files.createTempDirectory(tempWorkspace, "streaming_entities");
-
-        // Ensure standard outputs path is ready
-        Files.createDirectories(finalMappingFile.getParent());
-
-        WindowedChunkMerger entityMerger = new WindowedChunkMerger(entityWorkDir, "ENTITY", metricsContext);
-        BoundedMemorySortSink memorySink = new BoundedMemorySortSink(entityMerger, 200_000);
         UriTripleBatchSourceSupplier sourceSupplier = new UriTripleBatchSourceSupplier(
             inputDataFile, "*.ttl", 25_000, false, metricsContext
         );
         
-        StreamEnvironment graph = new StreamEnvironment(); 
-        graph.fromSource(sourceSupplier)
-            .flatMap(triple -> {
-                List<TripleComponent> components = new ArrayList<>(3);
-                if (triple.getSubject() != null) components.add(triple.getSubject());
-                if (triple.getPredicate() != null) components.add(triple.getPredicate());
-                if (triple.getObject() != null && triple.getObject().getKind() == TripleComponent.Kind.IRI) {
-                    components.add(triple.getObject());
-                }
-                return components;
-            })
-            .sink(memorySink);
+        // try-with-resources guarantees no memory leaks
+        try (ManagedRocksDb forwardDb = new ManagedRocksDb(forwardDbDir, false)) {
+            StreamEnvironment graph = new StreamEnvironment();
 
-        long pipelineStartTime = System.nanoTime();
-        graph.execute();
-        long pipelineDuration = System.nanoTime() - pipelineStartTime;
+            graph.fromSource(sourceSupplier)
+                 .map(new R1RocksDbEncoderMap(forwardDb.get(), bitWidthN))
+                 .sink(outputEncodedFile);
 
-        memorySink.flushRemaining();
+            LOGGER.info("Starting Forward Encoding Phase...");
+            long startTime = System.nanoTime();
+            graph.execute();
+            long duration = System.nanoTime() - startTime;
+            LOGGER.info("Encoding Complete. Time: {} ms", duration / 1_000_000.0);
+        }
+    }
 
-        // Terminal K-Way Merge Pass + Numbering on second column
-        LOGGER.info("Data streaming completed. Executing terminal K-Way merge pass...");
-        entityMerger.executeFinalMergePass(finalMappingFile);
-
-        // Print Execution Summary and Historical Metrics
-        PipelineMetricsReportWriter reportWriter = new PipelineMetricsReportWriter();
-        reportWriter.generateExecutionReports(metricsContext);
-        
-        LOGGER.info("R1 Pipeline Execution Complete. Pipeline duration: {} ms", pipelineDuration / 1_000_000.0);
+    public static int calculateBitWidth(Path textMappingFile) throws IOException {
+        long totalUniqueMappings;
+        try (BufferedReader headerReader = Files.newBufferedReader(textMappingFile)) {
+            String firstLine = headerReader.readLine();
+            if (firstLine == null || firstLine.trim().isEmpty()) {
+                throw new IllegalStateException("Mapping file is empty.");
+            }
+            totalUniqueMappings = Long.parseLong(firstLine.trim());
+        }
+        if (totalUniqueMappings <= 1) return 1;
+        return (int) Math.ceil(Math.log(totalUniqueMappings) / Math.log(2));
     }
 }
