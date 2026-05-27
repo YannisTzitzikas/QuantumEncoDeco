@@ -68,6 +68,6 @@ This framework is described in the following publication (under review):
 ## Future Work
 
 Potential areas of improvements:
-1. Decoupling the graph declaration API from the physical runtime engine execution.
-2. Compiling and Serializing the graph Intermediate Representation.
-3. Developping a Client CLI to manage resources and execution of given graphs.
+1. Decoupling the graph declaration API from the physical runtime engine.
+2. Serializing the graph Intermediate Representation.
+3. Developping a Client CLI to manage resources and execute given graphs.
